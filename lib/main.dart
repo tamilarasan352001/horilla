@@ -1,0 +1,637 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter_face_api_beta/flutter_face_api.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:horilla/common/appColors.dart';
+import 'package:horilla/common/appimages.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'attendance_views/attendance_attendance.dart';
+import 'attendance_views/attendance_overview.dart';
+import 'attendance_views/attendance_request.dart';
+import 'attendance_views/hour_account.dart';
+import 'attendance_views/my_attendance_view.dart';
+import 'checkin_checkout/checkin_checkout_views/checkin_checkout_form.dart';
+import 'employee_views/employee_form.dart';
+import 'employee_views/employee_list.dart';
+import 'horilla_leave/all_assigned_leave.dart';
+import 'horilla_leave/leave_allocation_request.dart';
+import 'horilla_leave/leave_overview.dart';
+import 'horilla_leave/leave_request.dart';
+import 'horilla_leave/leave_types.dart';
+import 'horilla_leave/my_leave_request.dart';
+import 'horilla_leave/selected_leave_type.dart';
+import 'horilla_main/login.dart';
+import 'horilla_main/home.dart';
+import 'horilla_main/notifications_list.dart';
+import 'package:http/http.dart' as http;
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+var faceSdk = FaceSDK.instance;
+int currentPage = 1;
+bool isFirstFetch = true;
+Set<int> seenNotificationIds = {};
+List<Map<String, dynamic>> notifications = [];
+int notificationsCount = 0;
+bool isLoading = true;
+Timer? _notificationTimer;
+late Map<String, dynamic> arguments = {};
+List<Map<String, dynamic>> fetchedNotifications = [];
+Map<String, dynamic> newNotificationList = {};
+
+@pragma('vm:entry-point')
+Future<void> notificationTapBackground(
+    NotificationResponse notificationResponse) async {
+  print('notification(${notificationResponse.id}) action tapped: '
+      '${notificationResponse.actionId} with'
+      ' payload: ${notificationResponse.payload}');
+  if (notificationResponse.input?.isNotEmpty ?? false) {
+    final context = await navigatorKey.currentState?.context;
+    if (context != null) {
+      _onSelectNotification(context);
+    }
+    print(
+        'notification action tapped with input: ${notificationResponse.input}');
+  }
+}
+
+Future<void> main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  await faceSdk.initialize();
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/horilla_logo');
+
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  // Initialize
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse details) async {
+      final context = await navigatorKey.currentState?.context;
+      if (context != null) {
+        _onSelectNotification(context);
+      }
+    },
+    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+  );
+
+  _notificationTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+    fetchNotifications();
+    unreadNotificationsCount();
+  });
+
+  runApp(LoginApp());
+  clearSharedPrefs();
+}
+
+void clearSharedPrefs() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('clockCheckedIn');
+  await prefs.remove('checkout');
+  await prefs.remove('checkin');
+}
+
+void _onSelectNotification(BuildContext context) {
+  Navigator.pushNamed(context, '/notifications_list');
+  markAllReadNotification();
+}
+
+// Function to show a notification
+void _showNotification() async {
+  FlutterRingtonePlayer().playNotification();
+  const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      AndroidNotificationDetails(
+          'your_channel_id', // Unique channel ID
+          'your_channel_name', // Channel name for notifications
+          channelDescription: 'your_channel_description',
+          importance: Importance.max, // Max importance for notifications
+          priority: Priority.high, // High priority
+          playSound: false,
+          silent: true
+          // sound: null
+          // sound: RawResourceAndroidNotificationSound(
+          //     'android_notification'), // Custom sound
+          );
+
+  const NotificationDetails platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
+  final timestamp = DateTime.parse(newNotificationList['timestamp']);
+  final timeAgo = timeago.format(timestamp);
+  final user = arguments['employee_name'];
+  print('$timeAgo by User $user');
+
+  await flutterLocalNotificationsPlugin.show(
+    newNotificationList['id'], // Notification ID
+    newNotificationList['verb'], // Title of the notification
+    '$timeAgo by User', // Body of the notification
+    platformChannelSpecifics,
+    payload: 'your_payload', // Optional payload to pass to the app
+  );
+}
+
+void prefetchData() async {
+  final prefs = await SharedPreferences.getInstance();
+  var token = prefs.getString("token");
+  var typed_serverUrl = prefs.getString("typed_url");
+  var employeeId = prefs.getInt("employee_id");
+  var uri = Uri.parse('$typed_serverUrl/api/employee/employees/$employeeId');
+  var response = await http.get(uri, headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $token",
+  });
+
+  if (response.statusCode == 200) {
+    final responseData = jsonDecode(response.body);
+    arguments = {
+      'employee_id': responseData['id'],
+      'employee_name': responseData['employee_first_name'] +
+          ' ' +
+          responseData['employee_last_name'],
+      'badge_id': responseData['badge_id'],
+      'email': responseData['email'],
+      'phone': responseData['phone'],
+      'date_of_birth': responseData['dob'],
+      'gender': responseData['gender'],
+      'address': responseData['address'],
+      'country': responseData['country'],
+      'state': responseData['state'],
+      'city': responseData['city'],
+      'qualification': responseData['qualification'],
+      'experience': responseData['experience'],
+      'marital_status': responseData['marital_status'],
+      'children': responseData['children'],
+      'emergency_contact': responseData['emergency_contact'],
+      'emergency_contact_name': responseData['emergency_contact_name'],
+      'employee_work_info_id': responseData['employee_work_info_id'],
+      'employee_bank_details_id': responseData['employee_bank_details_id'],
+      'employee_profile': responseData['employee_profile'],
+      'job_position_name': responseData['job_position_name']
+    };
+  }
+}
+
+Future<void> markAllReadNotification() async {
+  print('llllll');
+  final prefs = await SharedPreferences.getInstance();
+  var token = prefs.getString("token");
+  var typed_serverUrl = prefs.getString("typed_url");
+  var uri =
+      Uri.parse('$typed_serverUrl/api/notifications/notifications/bulk-read/');
+  var response = await http.post(uri, headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $token",
+  });
+  print(response.statusCode);
+
+  if (response.statusCode == 200) {
+    notifications.clear();
+    unreadNotificationsCount();
+    fetchNotifications();
+  }
+}
+
+Future<void> fetchNotifications() async {
+  final prefs = await SharedPreferences.getInstance();
+  var token = prefs.getString("token");
+  var typed_serverUrl = prefs.getString("typed_url");
+  if (typed_serverUrl == null || typed_serverUrl.isEmpty) {
+    return;
+  }
+  if (currentPage != 0) {
+    var uri = Uri.parse(
+        '$typed_serverUrl/api/notifications/notifications/list/unread?page=$currentPage');
+    var response = await http.get(uri, headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    });
+
+    if (response.statusCode == 200) {
+      List<Map<String, dynamic>> fetchedNotifications =
+          List<Map<String, dynamic>>.from(
+        jsonDecode(response.body)['results']
+            .where((notification) => notification['deleted'] == false)
+            .toList(),
+      );
+      if (fetchedNotifications.isNotEmpty) {
+        newNotificationList = fetchedNotifications[0];
+        List<int> newNotificationIds = fetchedNotifications
+            .map((notification) => notification['id'] as int)
+            .toList();
+        print(newNotificationList['id']);
+
+        // Check for any new notification IDs
+        bool hasNewNotifications =
+            newNotificationIds.any((id) => !seenNotificationIds.contains(id));
+
+        if (!isFirstFetch && hasNewNotifications) {
+          _playNotificationSound();
+        }
+
+        // Update the seenNotificationIds set with new IDs
+        seenNotificationIds.addAll(newNotificationIds);
+
+        // Update notifications list and other states
+        notifications = fetchedNotifications;
+        notificationsCount = jsonDecode(response.body)['count'];
+        isFirstFetch = false;
+        final timestamp = DateTime.parse(newNotificationList['timestamp']);
+        final timeAgo = timeago.format(timestamp);
+        final user = arguments['employee_name'];
+        print('$timeAgo by User $user');
+        isLoading = false;
+      } else {
+        print("No notifications available.");
+      }
+    }
+  } else {
+    currentPage = 1;
+    var uri = Uri.parse(
+        '$typed_serverUrl/api/notifications/notifications/list/unread');
+    var response = await http.get(uri, headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    });
+
+    if (response.statusCode == 200) {
+      List<Map<String, dynamic>> fetchedNotifications =
+          List<Map<String, dynamic>>.from(
+        jsonDecode(response.body)['results']
+            .where((notification) => notification['deleted'] == false)
+            .toList(),
+      );
+      if (fetchedNotifications.isNotEmpty) {
+        newNotificationList = fetchedNotifications[0];
+        List<int> newNotificationIds = fetchedNotifications
+            .map((notification) => notification['id'] as int)
+            .toList();
+        print(newNotificationList['id']);
+
+        bool hasNewNotifications =
+            newNotificationIds.any((id) => !seenNotificationIds.contains(id));
+
+        if (!isFirstFetch && hasNewNotifications) {
+          _playNotificationSound();
+        }
+
+        seenNotificationIds.addAll(newNotificationIds);
+
+        notifications = fetchedNotifications;
+        notificationsCount = jsonDecode(response.body)['count'];
+        isFirstFetch = false;
+        final timestamp = DateTime.parse(newNotificationList['timestamp']);
+        final timeAgo = timeago.format(timestamp);
+        final user = arguments['employee_name'];
+        print('$timeAgo by User $user');
+        isLoading = false;
+      } else {
+        print("No notifications available.");
+      }
+    }
+  }
+}
+
+Future<void> unreadNotificationsCount() async {
+  final prefs = await SharedPreferences.getInstance();
+  var token = prefs.getString("token");
+  var typed_serverUrl = prefs.getString("typed_url");
+
+  if (typed_serverUrl == null || typed_serverUrl.isEmpty) return;
+
+  var uri =
+      Uri.parse('$typed_serverUrl/api/notifications/notifications/list/unread');
+  var response = await http.get(uri, headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $token",
+  });
+
+  if (response.statusCode == 200) {
+    notificationsCount = jsonDecode(response.body)['count'];
+    isLoading = false;
+  }
+}
+
+void _playNotificationSound() {
+  _showNotification();
+}
+
+class LoginApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Login Page',
+      navigatorKey: navigatorKey, // Set navigator key for global context access
+      home: FutureBuilderPage(),
+      routes: {
+        '/login': (context) => LoginPage(),
+        '/home': (context) => HomePage(),
+        '/employees_list': (context) => EmployeeListPage(),
+        '/employees_form': (context) => EmployeeFormPage(
+              dashBoardArgs: arguments,
+            ),
+        '/attendance_overview': (context) => AttendanceOverview(),
+        '/attendance_attendance': (context) => AttendanceAttendance(),
+        '/attendance_request': (context) => AttendanceRequest(),
+        '/my_attendance_view': (context) => MyAttendanceViews(),
+        '/employee_hour_account': (context) => HourAccountFormPage(),
+        '/employee_checkin_checkout': (context) => CheckInCheckOutFormPage(),
+        '/leave_overview': (context) => LeaveOverview(),
+        '/leave_types': (context) => LeaveTypes(),
+        '/my_leave_request': (context) => MyLeaveRequest(),
+        '/leave_request': (context) => LeaveRequest(),
+        '/leave_allocation_request': (context) => LeaveAllocationRequest(),
+        '/all_assigned_leave': (context) => AllAssignedLeave(),
+        '/selected_leave_type': (context) => SelectedLeaveType(),
+        '/notifications_list': (context) => NotificationsList(),
+      },
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white, // Adjust background color as desired
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            //SvgPicture.asset(Appimages.splashScreenImg,width: 150,height: 150,),
+            Image.asset(
+              Appimages.splashScreenImg, // Path to your logo
+              width: 250, // You can adjust the size of the logo
+              height: 350,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FutureBuilderPage extends StatefulWidget {
+  const FutureBuilderPage({super.key});
+
+  @override
+  State<FutureBuilderPage> createState() => _FutureBuilderPageState();
+}
+
+class _FutureBuilderPageState extends State<FutureBuilderPage> {
+  late Future<bool> _futurePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _futurePath = _initialize();
+  }
+
+  Future<bool> _initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    var sessionId = prefs.getString("token");
+    return sessionId != null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future:
+          Future.delayed(const Duration(milliseconds: 2), () => _futurePath),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasData && snapshot.data == true) {
+            return const DashboardScreen();
+            //HomePage();
+          } else {
+            return LoginPage();
+          }
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
+
+class DashboardScreen extends StatefulWidget {
+  final int initialIndex;
+  final Map<String, dynamic>? arguments;
+  const DashboardScreen({
+    super.key,
+    this.initialIndex = 0,
+    this.arguments,
+  });
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late int _selectedIndex;
+  Map<String, dynamic>? _arguments;
+  bool _isDisposed = false;
+  bool isTabSwitching = false;
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+    if (widget.arguments != null) {
+      _arguments = widget.arguments;
+    } else {
+      prefetchData();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
+    //prefetchData();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    if (isTabSwitching) return;
+    isTabSwitching = true;
+    final isHomeTab = index == 0;
+    final isClockTab = index == 1;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _selectedIndex = index;
+      });
+      isTabSwitching = false;
+    });
+    if (isHomeTab||isClockTab) {
+      prefetchData();
+    }
+  }
+
+  void prefetchData() async {
+    final prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token");
+    var typedServerUrl = prefs.getString("typed_url");
+    var employeeId = prefs.getInt("employee_id");
+    var uri = Uri.parse('$typedServerUrl/api/employee/employees/$employeeId');
+    var response = await http.get(uri, headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token",
+    });
+
+    if (response.statusCode == 200 && !_isDisposed && mounted) {
+      final responseData = jsonDecode(response.body);
+      if (!mounted) return;
+      setState(() {
+        _arguments = {
+          'employee_id': responseData['id'] ?? '',
+          'employee_name': (responseData['employee_first_name'] ?? '') +
+              ' ' +
+              (responseData['employee_last_name'] ?? ''),
+          'badge_id': responseData['badge_id'] ?? '',
+          'email': responseData['email'] ?? '',
+          'phone': responseData['phone'] ?? '',
+          'date_of_birth': responseData['dob'] ?? '',
+          'gender': responseData['gender'] ?? '',
+          'address': responseData['address'] ?? '',
+          'country': responseData['country'] ?? '',
+          'state': responseData['state'] ?? '',
+          'city': responseData['city'] ?? '',
+          'qualification': responseData['qualification'] ?? '',
+          'experience': responseData['experience'] ?? '',
+          'marital_status': responseData['marital_status'] ?? '',
+          'children': responseData['children'] ?? '',
+          'emergency_contact': responseData['emergency_contact'] ?? '',
+          'emergency_contact_name':
+              responseData['emergency_contact_name'] ?? '',
+          'employee_work_info_id': responseData['employee_work_info_id'] ?? '',
+          'employee_bank_details_id':
+              responseData['employee_bank_details_id'] ?? '',
+          'employee_profile': responseData['employee_profile'] ?? '',
+          'job_position_name': responseData['job_position_name'] ?? '',
+          'tabCountTwo': true
+        };
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_arguments == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final List<Widget> _pages = [
+      const HomePage(),
+      const CheckInCheckOutFormPage(),
+      EmployeeFormPage(dashBoardArgs: _arguments!),
+    ];
+
+    return Scaffold(
+      body: _pages[_selectedIndex], // your screen pages
+      bottomNavigationBar: Container(
+        height: 60, // adjust height as needed
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavItem(
+                0, Appimages.homeImg, Appimages.homeEnableImg, "Home"),
+            _buildNavItem(
+                1, Appimages.clcokImg, Appimages.clcokEnableImg, "Clock"),
+            _buildNavItem(
+                2, Appimages.profileImg, Appimages.profileEnableImg, "Profile"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+      int index, String icon, String activeIcon, String label) {
+    final isSelected = _selectedIndex == index;
+    return InkWell(
+      onTap: () => _onItemTapped(index),
+      // setState(() {
+      //   _selectedIndex = index;
+      // }),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            children: [
+              if (isSelected) ...[
+                Positioned(
+                  top: -6, // adjust to move up
+                  right: 5,
+                  child: Container(
+                    height: 12,
+                    width: 12,
+                    decoration: const BoxDecoration(
+                      color: Appcolors.appBlue, // or any color
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+              Column(
+                children: [
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  SvgPicture.asset(isSelected ? activeIcon : icon),
+                ],
+              ),
+            ],
+          ),
+          //: SvgPicture.asset(isSelected ? activeIcon : icon),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Appcolors.appBlue : Colors.grey,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
