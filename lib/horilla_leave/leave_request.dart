@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,7 @@ class _LeaveRequest extends State<LeaveRequest>
   String? editEmployeeType;
   String fileName = '';
   String filePath = '';
+     late Future<void> permissionFuture;
   Map<String, String> employeeIdMap = {};
 
   Map<String, dynamic> breakdownMaps = {
@@ -142,6 +144,7 @@ class _LeaveRequest extends State<LeaveRequest>
     super.initState();
     _scrollController.addListener(_scrollListener);
     _tabController = TabController(length: 5, vsync: this);
+    permissionFuture = checkPermissions();
     startBreakdown.clear();
     startDateSelect.text = "Select Start Date";
     endDateSelect.text = "Select End Date";
@@ -641,7 +644,7 @@ class _LeaveRequest extends State<LeaveRequest>
           return Stack(
             children: [
               AlertDialog(
-                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                insetPadding: const EdgeInsets.symmetric(horizontal: 16),
                 backgroundColor: Appcolors.cardColor,
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -649,7 +652,9 @@ class _LeaveRequest extends State<LeaveRequest>
                     const Text(
                       "Add Leave",
                       style: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.black,fontSize: 21),
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                          fontSize: 21),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -680,7 +685,7 @@ class _LeaveRequest extends State<LeaveRequest>
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text("Employee",
-                           style: TextStyle(
+                            style: TextStyle(
                                 fontWeight: FontWeight.w500, fontSize: 16)),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.01),
@@ -745,11 +750,9 @@ class _LeaveRequest extends State<LeaveRequest>
                         ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.03),
-                        const Text(
-                          "Leave Type",
-                          style: TextStyle(
-                                fontWeight: FontWeight.w500, fontSize: 16)
-                        ),
+                        const Text("Leave Type",
+                            style: TextStyle(
+                                fontWeight: FontWeight.w500, fontSize: 16)),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.01),
                         TypeAheadField<String>(
@@ -835,7 +838,7 @@ class _LeaveRequest extends State<LeaveRequest>
                             }
                           },
                           decoration: InputDecoration(
-                             suffixIcon: Padding(
+                            suffixIcon: Padding(
                               padding: EdgeInsets.all(12.0),
                               child: Image.asset(
                                 Appimages.calendarIcon,
@@ -921,7 +924,7 @@ class _LeaveRequest extends State<LeaveRequest>
                             }
                           },
                           decoration: InputDecoration(
-                             suffixIcon: Padding(
+                            suffixIcon: Padding(
                               padding: EdgeInsets.all(12.0),
                               child: Image.asset(
                                 Appimages.calendarIcon,
@@ -940,7 +943,11 @@ class _LeaveRequest extends State<LeaveRequest>
                         ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.03),
-                        const Text("End Date Breakdown",style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16),),
+                        const Text(
+                          "End Date Breakdown",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 16),
+                        ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.01),
                         Padding(
@@ -984,7 +991,11 @@ class _LeaveRequest extends State<LeaveRequest>
                         ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.03),
-                        const Text("Description",style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16),),
+                        const Text(
+                          "Description",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 16),
+                        ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.01),
                         TextField(
@@ -1720,8 +1731,8 @@ class _LeaveRequest extends State<LeaveRequest>
                             child: TextField(
                               readOnly: true,
                               controller: startDateInput,
-                              decoration:InputDecoration(
-                                 suffixIcon: Padding(
+                              decoration: InputDecoration(
+                                suffixIcon: Padding(
                                   padding: EdgeInsets.all(12.0),
                                   child: Image.asset(
                                     Appimages.calendarIcon,
@@ -2785,7 +2796,8 @@ class _LeaveRequest extends State<LeaveRequest>
         body: _isShimmerVisible
             ? _buildLoadingWidget()
             : _buildLeaveRequestWidget(),
-        drawer: Drawer(
+        drawer: LeaveDrawer(permissionFuture: permissionFuture, permissionLeaveOverviewCheck: permissionLeaveOverviewCheck, permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck, permissionLeaveRequestCheck: permissionLeaveRequestCheck, permissionLeaveTypeCheck: permissionLeaveTypeCheck, permissionLeaveAllocationCheck: permissionLeaveAllocationCheck, permissionLeaveAssignCheck: permissionLeaveAssignCheck)
+        /* Drawer(
           child: FutureBuilder<void>(
             future: checkPermissions(),
             builder: (context, snapshot) {
@@ -2889,7 +2901,7 @@ class _LeaveRequest extends State<LeaveRequest>
               }
             },
           ),
-        ),
+        ), */
       ),
     );
   }
@@ -3152,25 +3164,21 @@ class _LeaveRequest extends State<LeaveRequest>
                   children: [
                     allRequestsLength == 0
                         ? ListView(
-                            children: const [
+                            children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 40.0),
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        Icons.calendar_month_outlined,
-                                        color: Colors.black,
-                                        size: 92,
-                                      ),
+                                      SvgPicture.asset(Appimages.emptyData),
                                       SizedBox(height: 20),
-                                      Text(
+                                     const Text(
                                         "There are no Leave request to display",
                                         style: TextStyle(
-                                            fontSize: 16.0,
+                                            fontSize: 15.0,
                                             color: Colors.black,
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.w500),
                                       ),
                                     ],
                                   ),
@@ -3181,7 +3189,7 @@ class _LeaveRequest extends State<LeaveRequest>
                         : buildTabContent(myAllRequests),
                     requestedLength == 0
                         ? ListView(
-                            children: const [
+                            children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 40.0),
                                 child: Center(
@@ -3191,18 +3199,14 @@ class _LeaveRequest extends State<LeaveRequest>
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          Icon(
-                                            Icons.calendar_month_outlined,
-                                            color: Colors.black,
-                                            size: 92,
-                                          ),
+                                          SvgPicture.asset(Appimages.emptyData),
                                           SizedBox(height: 20),
-                                          Text(
+                                          const Text(
                                             "There are no Leave request to display",
                                             style: TextStyle(
-                                                fontSize: 16.0,
+                                                fontSize: 15.0,
                                                 color: Colors.black,
-                                                fontWeight: FontWeight.bold),
+                                                fontWeight: FontWeight.w500),
                                           ),
                                         ],
                                       ),
@@ -3215,25 +3219,21 @@ class _LeaveRequest extends State<LeaveRequest>
                         : buildRequestedTabContent(requestedRecords),
                     approvedLength == 0
                         ? ListView(
-                            children: const [
+                            children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 40.0),
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        Icons.calendar_month_outlined,
-                                        color: Colors.black,
-                                        size: 92,
-                                      ),
+                                      SvgPicture.asset(Appimages.emptyData),
                                       SizedBox(height: 20),
-                                      Text(
+                                      const Text(
                                         "There are no Leave request to display",
                                         style: TextStyle(
-                                            fontSize: 16.0,
+                                            fontSize: 15.0,
                                             color: Colors.black,
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.w500),
                                       ),
                                     ],
                                   ),
@@ -3244,25 +3244,21 @@ class _LeaveRequest extends State<LeaveRequest>
                         : buildApprovedTabContent(approvedRecords),
                     cancelledLength == 0
                         ? ListView(
-                            children: const [
+                            children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 40.0),
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        Icons.calendar_month_outlined,
-                                        color: Colors.black,
-                                        size: 92,
-                                      ),
+                                      SvgPicture.asset(Appimages.emptyData),
                                       SizedBox(height: 20),
-                                      Text(
+                                      const Text(
                                         "There are no Leave request to display",
                                         style: TextStyle(
-                                            fontSize: 16.0,
+                                            fontSize: 15.0,
                                             color: Colors.black,
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.w500),
                                       ),
                                     ],
                                   ),
@@ -3273,25 +3269,21 @@ class _LeaveRequest extends State<LeaveRequest>
                         : buildCancelledTabContent(cancelledRecords),
                     rejectedLength == 0
                         ? ListView(
-                            children: const [
+                            children: [
                               Padding(
                                 padding: EdgeInsets.only(top: 40.0),
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        Icons.calendar_month_outlined,
-                                        color: Colors.black,
-                                        size: 92,
-                                      ),
+                                      SvgPicture.asset(Appimages.emptyData),
                                       SizedBox(height: 20),
-                                      Text(
-                                        "There are no Leave request to display",
+                                      const Text(
+                                        " Leave request to display",
                                         style: TextStyle(
-                                            fontSize: 16.0,
+                                            fontSize: 15.0,
                                             color: Colors.black,
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.w500),
                                       ),
                                     ],
                                   ),

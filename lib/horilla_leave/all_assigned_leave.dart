@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multiselect_dropdown_flutter/multiselect_dropdown_flutter.dart';
@@ -32,6 +35,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   List<String> selectedEmployeeItems = [];
   List<dynamic> leaveItems = [];
   List<Map<String, dynamic>> allLeaveList = [];
+     late Future<void> permissionFuture;
   List<int> assignedTypeItem = [];
   var employeeItems = [];
   var employeeItemsId = [];
@@ -56,6 +60,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   @override
   void initState() {
     super.initState();
+    permissionFuture = checkPermissions();
     leaveType.clear();
     getLeaveType();
     getAssignedLeaveType();
@@ -328,7 +333,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
             return Stack(
               children: [
                 AlertDialog(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Appcolors.cardColor,
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -370,7 +375,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                             numberOfItemsLabelToShow: 3,
                             checkboxFillColor: Colors.grey,
                             boxDecoration: BoxDecoration(
-                              border: Border.all(color: Colors.redAccent),
+                              border: Border.all(color: Appcolors.appBlue),
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
@@ -431,7 +436,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                             numberOfItemsLabelToShow: 2,
                             checkboxFillColor: Colors.grey,
                             boxDecoration: BoxDecoration(
-                              border: Border.all(color: Colors.redAccent),
+                              border: Border.all(color: Appcolors.appBlue),
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
@@ -480,7 +485,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                               style: ButtonStyle(
                                 backgroundColor:
                                     MaterialStateProperty.all<Color>(
-                                        Colors.red),
+                                        Appcolors.appBlue),
                                 shape: MaterialStateProperty.all<
                                     RoundedRectangleBorder>(
                                   RoundedRectangleBorder(
@@ -599,7 +604,90 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
     return Scaffold(
       backgroundColor: Colors.white,
       key: _scaffoldKey,
-      appBar: AppBar(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(115),
+        child: Stack(
+          children: [
+            // Blue background layer
+            Container(
+              height: 115,
+              decoration: const BoxDecoration(
+                color: Appcolors.appBlue,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+            ),
+
+            Positioned(
+              child: Image.asset(
+                width: 200,
+                Appimages.appbar,
+                fit: BoxFit.cover,
+              ),
+            ),
+            // Actual content
+            Positioned.fill(
+              child: Row(
+                children: [
+                  // Back button
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20.0, top: 40),
+                    child: GestureDetector(
+                      onTap: () {
+                        _scaffoldKey.currentState?.openDrawer();
+                      },
+                      child: SvgPicture.asset(
+                        Appimages.menuIcon,
+                        color: Colors.white,
+                        // height: 24,
+                        // width: 24,
+                      ),
+                    ),
+                  ),
+
+                  const Padding(
+                    padding: EdgeInsets.only(left: 50.0, top: 40),
+                    child: Text(
+                      'Assigned Leave',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+
+                  Padding(
+                    padding: const EdgeInsets.only(right: 20.0, top: 40),
+                    child: InkWell(
+                        onTap: () {
+                          isAction = false;
+                          _showCreateDialog(context);
+                        },
+                        child: Text(
+                          'Assign',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        )
+                        // Image.asset(
+                        //   Appimages.plusIcon,
+                        //   height: 24,
+                        //   width: 24,
+                        // ),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      /* appBar: AppBar(
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.menu),
@@ -646,11 +734,12 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
             ),
           ),
         ],
-      ),
+      ), */
       body: _isShimmerVisible
           ? _buildLoadingWidget()
           : _buildAllAssignedLeaveWidget(),
-      drawer: Drawer(
+          drawer: LeaveDrawer(permissionFuture: permissionFuture, permissionLeaveOverviewCheck: permissionLeaveOverviewCheck, permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck, permissionLeaveRequestCheck: permissionLeaveRequestCheck, permissionLeaveTypeCheck: permissionLeaveTypeCheck, permissionLeaveAllocationCheck: permissionLeaveAllocationCheck, permissionLeaveAssignCheck: permissionLeaveAssignCheck),
+      /* drawer: Drawer(
         child: FutureBuilder<void>(
           future: checkPermissions(),
           builder: (context, snapshot) {
@@ -665,10 +754,9 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                       child: SizedBox(
                         width: 80,
                         height: 80,
-                        child: Image.asset(
-                           Appimages.splashScreenImg
-                          //'Assets/horilla-logo.png',
-                        ),
+                        child: Image.asset(Appimages.splashScreenImg
+                            //'Assets/horilla-logo.png',
+                            ),
                       ),
                     ),
                   ),
@@ -693,10 +781,9 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                       child: SizedBox(
                         width: 80,
                         height: 80,
-                        child: Image.asset(
-                           Appimages.splashScreenImg
-                          //'Assets/horilla-logo.png',
-                        ),
+                        child: Image.asset(Appimages.splashScreenImg
+                            //'Assets/horilla-logo.png',
+                            ),
                       ),
                     ),
                   ),
@@ -754,7 +841,7 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
             }
           },
         ),
-      ),
+      ), */
     );
   }
 
@@ -823,62 +910,137 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
   Widget _buildAllAssignedLeaveWidget() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 10.0, right: 10.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Card(
-                      margin: const EdgeInsets.all(8),
-                      elevation: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade50),
-                          borderRadius: BorderRadius.circular(10),
+      child: Column(
+        children: [
+          // 🔍 Search Bar - Fixed
+          Padding(
+            padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: Appcolors.textBorderColor.withOpacity(0.5)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      onChanged: (employeeSearchValue) {
+                        setState(() {
+                          searchText = employeeSearchValue;
+                          filteredRecords = filterRecords(searchText);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide.none,
                         ),
-                        child: TextField(
-                          onChanged: (employeeSearchValue) {
-                            setState(() {
-                              searchText = employeeSearchValue;
-                              filteredRecords = filterRecords(searchText);
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'Search',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.0),
-                              borderSide: BorderSide.none,
+                        prefixIcon: Transform.scale(
+                          scale: 0.8,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SvgPicture.asset(
+                              Appimages.textSearch,
+                              color: Appcolors.textColor,
+                              height: 20,
+                              width: 20,
                             ),
-                            prefixIcon: Transform.scale(
-                              scale: 0.8,
-                              child: Icon(Icons.search,
-                                  color: Colors.blueGrey.shade300),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12.0, horizontal: 4.0),
-                            hintStyle: TextStyle(
-                                color: Colors.blueGrey.shade300, fontSize: 14),
-                            filled: true,
-                            fillColor: Colors.grey[100],
                           ),
-                          style: const TextStyle(fontSize: 14),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12.0, horizontal: 4.0),
+                        hintStyle: TextStyle(
+                            color: Colors.blueGrey.shade300, fontSize: 14),
+                        filled: true,
+                        fillColor: Colors.grey[100],
                       ),
+                      style: const TextStyle(fontSize: 14),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-            buildTabContentAttendance(leaveType, searchText),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // 🧾 Content Scrollable Only
+          Expanded(
+            child: SingleChildScrollView(
+              child: buildTabContentAttendance(leaveType, searchText),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // Widget _buildAllAssignedLeaveWidget() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: SingleChildScrollView(
+  //       child: Column(
+  //         children: [
+  //           Padding(
+  //             padding:
+  //                 const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
+  //             child: Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: Container(
+  //                     decoration: BoxDecoration(
+  //                       border: Border.all(
+  //                           color: Appcolors.textBorderColor.withOpacity(0.5)),
+  //                       borderRadius: BorderRadius.circular(10),
+  //                     ),
+  //                     child: TextField(
+  //                       onChanged: (employeeSearchValue) {
+  //                         setState(() {
+  //                           searchText = employeeSearchValue;
+  //                           filteredRecords = filterRecords(searchText);
+  //                         });
+  //                       },
+  //                       decoration: InputDecoration(
+  //                         hintText: 'Search',
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(8.0),
+  //                           borderSide: BorderSide.none,
+  //                         ),
+  //                         prefixIcon: Transform.scale(
+  //                           scale: 0.8,
+  //                           child: Padding(
+  //                             padding: const EdgeInsets.all(8.0),
+  //                             child: SvgPicture.asset(
+  //                               Appimages.textSearch,
+  //                               color: Appcolors.textColor,
+  //                               height: 20,
+  //                               width: 20,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                         contentPadding: const EdgeInsets.symmetric(
+  //                             vertical: 12.0, horizontal: 4.0),
+  //                         hintStyle: TextStyle(
+  //                             color: Colors.blueGrey.shade300, fontSize: 14),
+  //                         filled: true,
+  //                         fillColor: Colors.grey[100],
+  //                       ),
+  //                       style: const TextStyle(fontSize: 14),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+  //           buildTabContentAttendance(leaveType, searchText),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget buildTabContentAttendance(
       List<Map<String, dynamic>> leaveType, String searchText) {
@@ -938,8 +1100,8 @@ class _AllAssignedLeave extends State<AllAssignedLeave> {
                               ),
                             )
                           : ExpansionTile(
-                              collapsedBackgroundColor: Colors.red.shade50,
-                              backgroundColor: Colors.red.shade100,
+                              collapsedBackgroundColor: Appcolors.cardColor,
+                              backgroundColor: Appcolors.cardColor,
                               title: Row(
                                 children: [
                                   Container(

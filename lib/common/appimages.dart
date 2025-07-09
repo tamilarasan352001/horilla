@@ -22,4 +22,6 @@ class Appimages {
   static const textSearch = "Assets/images/search_text.svg";
   static const editIcon = "Assets/images/edit.png";
   static const deleteIcon = "Assets/images/delete.png";
+  static const emptyData = "Assets/images/emptyData.svg";
+  static const downArrow = "Assets/images/arrow_down.png";
 }

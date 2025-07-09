@@ -668,23 +668,19 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
                           ),
                         )
                       ] else if (requestsCount == 0)
-                        const Expanded(
+                         Expanded(
                           child: Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.search,
-                                  color: Colors.black,
-                                  size: 92,
-                                ),
+                               SvgPicture.asset(Appimages.emptyData),
                                 SizedBox(height: 20),
-                                Text(
+                               const Text(
                                   "There are no employee records to display",
                                   style: TextStyle(
-                                    fontSize: 16.0,
+                                    fontSize: 15.0,
                                     color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:horilla/attendance_views/appDrawer.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
 import 'package:http/http.dart' as http;
@@ -47,6 +48,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
   String? selectedWorkTypeId;
   String? createEmployee;
   String? selectedEmployeeId;
+    late Future<void> permissionFuture;
   late String baseUrl = '';
   late Map<String, dynamic> arguments;
   var employeeItems = [''];
@@ -88,7 +90,9 @@ class _AttendanceRequest extends State<AttendanceRequest>
   void initState() {
     super.initState();
     prefetchData();
+
     _scrollController.addListener(_scrollListener);
+    permissionFuture = permissionChecks();
     getAllRequestedAttendances();
     getAllAttendances();
     getBaseUrl();
@@ -407,7 +411,9 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             'Employee',
-                            style: TextStyle(color: Colors.black,fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -514,7 +520,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             "Shift",
-                             style: TextStyle(
+                            style: TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w500),
                           ),
@@ -659,7 +665,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   children: [
                                     const Text(
                                       'Check-In Date',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500),
                                     ),
@@ -711,7 +717,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   children: [
                                     const Text(
                                       'Check-In',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500),
                                     ),
@@ -732,35 +738,38 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                         _validateCheckIn = false;
                                       },
                                       decoration: InputDecoration(
-                                        hintText: '00:00',
-                                        labelStyle:
-                                            TextStyle(color: Colors.grey[350]),
-                                        border: const OutlineInputBorder(),
-                                        errorText: _validateCheckIn
-                                            ? 'Please Choose a Check-In'
-                                            : null,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 10.0),
-                                        prefixIcon: Padding(
-                                          padding: const EdgeInsets.all(10.0),
-                                          child: InkWell(
-                                            onTap: ()async{
-                                                final TimeOfDay? picked =
-                                                await showTimePicker(
-                                              context: context,
-                                              initialTime: TimeOfDay.now(),
-                                            );
-                                            if (picked != null) {
-                                              checkInHoursController.text =
-                                                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                                              checkInHoursSpent =
-                                                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                                            }
-                                            },
-                                            child: SvgPicture.asset(Appimages.clcokImg)),
-                                        )
-                                       /*  IconButton(
+                                          hintText: '00:00',
+                                          labelStyle: TextStyle(
+                                              color: Colors.grey[350]),
+                                          border: const OutlineInputBorder(),
+                                          errorText: _validateCheckIn
+                                              ? 'Please Choose a Check-In'
+                                              : null,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 10.0),
+                                          prefixIcon: Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: InkWell(
+                                                onTap: () async {
+                                                  final TimeOfDay? picked =
+                                                      await showTimePicker(
+                                                    context: context,
+                                                    initialTime:
+                                                        TimeOfDay.now(),
+                                                  );
+                                                  if (picked != null) {
+                                                    checkInHoursController
+                                                            .text =
+                                                        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                                    checkInHoursSpent =
+                                                        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                                  }
+                                                },
+                                                child: SvgPicture.asset(
+                                                    Appimages.clcokImg)),
+                                          )
+                                          /*  IconButton(
                                           icon: const Icon(Icons.access_time),
                                           onPressed: () async {
                                             final TimeOfDay? picked =
@@ -776,7 +785,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                             }
                                           },
                                         ), */
-                                      ),
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -794,7 +803,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   children: [
                                     const Text(
                                       'Check-Out Date',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500),
                                     ),
@@ -846,7 +855,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   children: [
                                     const Text(
                                       'Check-Out',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500),
                                     ),
@@ -867,35 +876,38 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                         _validateCheckout = false;
                                       },
                                       decoration: InputDecoration(
-                                        hintText: '00:00',
-                                        errorText: _validateCheckout
-                                            ? 'Please Choose a Check-Out'
-                                            : null,
-                                        labelStyle:
-                                            TextStyle(color: Colors.grey[350]),
-                                        border: const OutlineInputBorder(),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 10.0),
-                                        prefixIcon: Padding(
-                                          padding: const EdgeInsets.all(10.0),
-                                          child: InkWell(
-                                            onTap: () async{
-                                              final TimeOfDay? picked =
-                                                await showTimePicker(
-                                              context: context,
-                                              initialTime: TimeOfDay.now(),
-                                            );
-                                            if (picked != null) {
-                                              checkoutHoursController.text =
-                                                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                                              checkOutHoursSpent =
-                                                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-                                            }
-                                            },
-                                            child: SvgPicture.asset(Appimages.clcokImg)),
-                                        )
-                                       /*  IconButton(
+                                          hintText: '00:00',
+                                          errorText: _validateCheckout
+                                              ? 'Please Choose a Check-Out'
+                                              : null,
+                                          labelStyle: TextStyle(
+                                              color: Colors.grey[350]),
+                                          border: const OutlineInputBorder(),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 10.0),
+                                          prefixIcon: Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: InkWell(
+                                                onTap: () async {
+                                                  final TimeOfDay? picked =
+                                                      await showTimePicker(
+                                                    context: context,
+                                                    initialTime:
+                                                        TimeOfDay.now(),
+                                                  );
+                                                  if (picked != null) {
+                                                    checkoutHoursController
+                                                            .text =
+                                                        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                                    checkOutHoursSpent =
+                                                        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                                  }
+                                                },
+                                                child: SvgPicture.asset(
+                                                    Appimages.clcokImg)),
+                                          )
+                                          /*  IconButton(
                                           icon: const Icon(Icons.access_time),
                                           onPressed: () async {
                                             final TimeOfDay? picked =
@@ -911,7 +923,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                             }
                                           },
                                         ), */
-                                      ),
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -929,7 +941,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   children: [
                                     const Text(
                                       'Working Hours',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500),
                                     ),
@@ -974,7 +986,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
                                   children: [
                                     const Text(
                                       'Minimum Hour',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500),
                                     ),
@@ -1255,8 +1267,8 @@ class _AttendanceRequest extends State<AttendanceRequest>
                           }
                         },
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Appcolors.appBlue),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Appcolors.appBlue),
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -1832,7 +1844,8 @@ class _AttendanceRequest extends State<AttendanceRequest>
           ],
         ), */
         body: isLoading ? _buildLoadingWidget() : _buildEmployeeDetailsWidget(),
-        drawer: Drawer(
+        drawer:AppDrawer(permissionFuture: permissionFuture, permissionOverview: permissionOverview, permissionAttendance: permissionAttendance, permissionAttendanceRequest: permissionAttendanceRequest, permissionHourAccount: permissionHourAccount)
+         /* Drawer(
           child: FutureBuilder<void>(
             future: permissionChecks(),
             builder: (context, snapshot) {
@@ -1882,7 +1895,8 @@ class _AttendanceRequest extends State<AttendanceRequest>
                         ? ListTile(
                             title: const Text('Overview'),
                             onTap: () {
-                              Navigator.pushNamed(
+                              
+                              Navigator.pushReplacementNamed(
                                   context, '/attendance_overview');
                             },
                           )
@@ -1891,7 +1905,8 @@ class _AttendanceRequest extends State<AttendanceRequest>
                         ? ListTile(
                             title: const Text('Attendance'),
                             onTap: () {
-                              Navigator.pushNamed(
+                             
+                              Navigator.pushReplacementNamed(
                                   context, '/attendance_attendance');
                             },
                           )
@@ -1900,7 +1915,8 @@ class _AttendanceRequest extends State<AttendanceRequest>
                         ? ListTile(
                             title: const Text('Attendance Request'),
                             onTap: () {
-                              Navigator.pushNamed(
+                            
+                              Navigator.pushReplacementNamed(
                                   context, '/attendance_request');
                             },
                           )
@@ -1909,7 +1925,8 @@ class _AttendanceRequest extends State<AttendanceRequest>
                         ? ListTile(
                             title: const Text('Hour Account'),
                             onTap: () {
-                              Navigator.pushNamed(
+                               
+                              Navigator.pushReplacementNamed(
                                   context, '/employee_hour_account');
                             },
                           )
@@ -1919,7 +1936,7 @@ class _AttendanceRequest extends State<AttendanceRequest>
               }
             },
           ),
-        ),
+        ), */
       ),
     );
   }
@@ -2101,20 +2118,16 @@ class _AttendanceRequest extends State<AttendanceRequest>
                           child: Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: ListView(
-                              children: const [
-                                Icon(
-                                  Icons.inventory_outlined,
-                                  color: Colors.black,
-                                  size: 92,
-                                ),
+                              children: [
+                                SvgPicture.asset(Appimages.emptyData),
                                 SizedBox(height: 20),
-                                Center(
+                                const Center(
                                   child: Text(
                                     "There are no attendance records to display",
                                     style: TextStyle(
-                                        fontSize: 16.0,
+                                        fontSize: 15.0,
                                         color: Colors.black,
-                                        fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ],
@@ -2130,20 +2143,16 @@ class _AttendanceRequest extends State<AttendanceRequest>
                           child: Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: ListView(
-                              children: const [
-                                Icon(
-                                  Icons.inventory_outlined,
-                                  color: Colors.black,
-                                  size: 92,
-                                ),
+                              children: [
+                                SvgPicture.asset(Appimages.emptyData),
                                 SizedBox(height: 20),
-                                Center(
+                                const Center(
                                   child: Text(
                                     "There are no attendance records to display",
                                     style: TextStyle(
-                                        fontSize: 16.0,
+                                        fontSize: 15.0,
                                         color: Colors.black,
-                                        fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ],
@@ -3209,7 +3218,6 @@ class _AttendanceRequest extends State<AttendanceRequest>
                             'id': record['id'],
                             'employee_name':
                                 '${record['employee_first_name'] ?? ''} ${record['employee_last_name'] ?? ''}',
-
                             'badge_id': record['badge_id'],
                             'shift_name': record['shift_name'],
                             'attendance_date': record['attendance_date'],

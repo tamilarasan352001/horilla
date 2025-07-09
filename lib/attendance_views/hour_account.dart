@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:horilla/attendance_views/appDrawer.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
 import 'package:http/http.dart' as http;
@@ -34,6 +35,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
       TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final _pageController = PageController(initialPage: 0);
+  late Future<void> permissionFuture;
   List<Map<String, dynamic>> requests = [];
   List<String> months = [
     'Select Month',
@@ -108,6 +110,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    permissionFuture = permissionChecks();
     getHourAccountRecords();
     getEmployees();
     prefetchData();
@@ -646,7 +649,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
           return Stack(
             children: [
               AlertDialog(
-                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                insetPadding: const EdgeInsets.symmetric(horizontal: 16),
                 backgroundColor: Appcolors.cardColor,
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -687,7 +690,10 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Employee',
-                          style: TextStyle(color: Colors.black,fontSize: 16,fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500),
                         ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.01),
@@ -699,9 +705,9 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               contentPadding:
                                   const EdgeInsets.symmetric(horizontal: 10.0),
-                              border:  OutlineInputBorder(
-                                borderSide: BorderSide(color: Appcolors.textBorderColor)
-                              ),
+                              border: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Appcolors.textBorderColor)),
                             ),
                           ),
                           suggestionsCallback: (pattern) {
@@ -742,7 +748,6 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                           hideOnError: false,
                           suggestionsBoxDecoration: SuggestionsBoxDecoration(
                             constraints: BoxConstraints(
-                              
                                 maxHeight: MediaQuery.of(context).size.height *
                                     0.23), // Limit height
                           ),
@@ -751,7 +756,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Month',
-                             style: TextStyle(
+                          style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
@@ -788,7 +793,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Year',
-                             style: TextStyle(
+                          style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
@@ -838,7 +843,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                     padding: EdgeInsets.all(2.0),
                                     child: Text(
                                       'Worked Hours',
-                                         style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500),
@@ -880,7 +885,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                     padding: EdgeInsets.all(2.0),
                                     child: Text(
                                       'Pending Hours',
-                                         style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500),
@@ -920,7 +925,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.02),
                         const Text(
                           'Overtime',
-                             style: TextStyle(
+                          style: TextStyle(
                               color: Colors.black,
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
@@ -1014,12 +1019,12 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
           return Stack(
             children: [
               AlertDialog(
-                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                insetPadding: const EdgeInsets.symmetric(horizontal: 16),
                 backgroundColor: Appcolors.cardColor,
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                     Text(
+                    Text(
                       "Add Hour Account",
                       style: TextStyle(
                           fontSize: 21,
@@ -1055,7 +1060,10 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Employee',
-                          style: TextStyle(color: Colors.black,fontWeight: FontWeight.w500,fontSize: 16),
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16),
                         ),
                         SizedBox(
                             height: MediaQuery.of(context).size.height * 0.01),
@@ -1119,7 +1127,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Month',
-                           style: TextStyle(
+                          style: TextStyle(
                               color: Colors.black,
                               fontWeight: FontWeight.w500,
                               fontSize: 16),
@@ -1161,7 +1169,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Year',
-                           style: TextStyle(
+                          style: TextStyle(
                               color: Colors.black,
                               fontWeight: FontWeight.w500,
                               fontSize: 16),
@@ -1266,7 +1274,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                     padding: EdgeInsets.all(2.0),
                                     child: Text(
                                       'Pending Hours',
-                                       style: TextStyle(
+                                      style: TextStyle(
                                           color: Colors.black,
                                           fontWeight: FontWeight.w500,
                                           fontSize: 16),
@@ -1312,7 +1320,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             height: MediaQuery.of(context).size.height * 0.03),
                         const Text(
                           'Overtime',
-                           style: TextStyle(
+                          style: TextStyle(
                               color: Colors.black,
                               fontWeight: FontWeight.w500,
                               fontSize: 16),
@@ -1684,7 +1692,6 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
           decoration: BoxDecoration(
             color: Appcolors.cardColor,
             borderRadius: BorderRadius.circular(8.0),
-          
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -1752,8 +1759,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                 ? '${record['badge_id']}'
                                 : '',
                             style: const TextStyle(
-                                fontSize: 12.0,
-                                fontWeight: FontWeight.normal),
+                                fontSize: 12.0, fontWeight: FontWeight.normal),
                           ),
                         ],
                       ),
@@ -1765,14 +1771,13 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 0.0),
+                            padding: const EdgeInsets.symmetric(vertical: 0.0),
                             child: Container(
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(50)),
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(50)),
                                 color: Colors.blue[100],
                               ),
                               child: InkWell(
@@ -1786,8 +1791,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                   _showEditHourAccount(context, record);
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 0.0),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 0.0),
                                   child: Image.asset(Appimages.editIcon),
                                 ),
                               ),
@@ -1813,14 +1818,13 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             width: 10,
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 0.0),
+                            padding: const EdgeInsets.symmetric(vertical: 0.0),
                             child: Container(
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(50)),
+                                borderRadius:
+                                    const BorderRadius.all(Radius.circular(50)),
                                 color: Colors.blue[100],
                               ),
                               child: InkWell(
@@ -1845,8 +1849,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                             IconButton(
                                               icon: const Icon(Icons.close),
                                               onPressed: () {
-                                                Navigator.of(context)
-                                                    .pop(true);
+                                                Navigator.of(context).pop(true);
                                               },
                                             ),
                                           ],
@@ -1910,8 +1913,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                                   );
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 0.0),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 0.0),
                                   child: Image.asset(Appimages.deleteIcon),
                                 ),
                               ),
@@ -2010,8 +2013,7 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                             // ),
                           ),
                           SizedBox(
-                              width:
-                                  MediaQuery.of(context).size.width * 0.005),
+                              width: MediaQuery.of(context).size.width * 0.005),
                           Container(
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
@@ -2070,165 +2072,171 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      key: _scaffoldKey,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(115),
-        child: Stack(
-          children: [
-            // Blue background layer
-            Container(
-              height: 115,
-              decoration: const BoxDecoration(
-                color: Appcolors.appBlue,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+        backgroundColor: Colors.white,
+        key: _scaffoldKey,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(115),
+          child: Stack(
+            children: [
+              // Blue background layer
+              Container(
+                height: 115,
+                decoration: const BoxDecoration(
+                  color: Appcolors.appBlue,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
                 ),
               ),
-            ),
 
-            Positioned(
-              child: Image.asset(
-                width: 200,
-                Appimages.appbar,
-                fit: BoxFit.cover,
+              Positioned(
+                child: Image.asset(
+                  width: 200,
+                  Appimages.appbar,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            // Actual content
-            Positioned.fill(
-              child: Row(
-                children: [
-                  // Back button
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20.0, top: 40),
-                    child: GestureDetector(
-                      onTap: () {
-                        _scaffoldKey.currentState?.openDrawer();
-                      },
-                      child: SvgPicture.asset(
-                        Appimages.menuIcon,
-                        color: Colors.white,
-                        // height: 24,
-                        // width: 24,
-                      ),
-                    ),
-                  ),
-
-                  const Padding(
-                    padding: EdgeInsets.only(left: 50.0, top: 40),
-                    child: Text(
-                      'Hour Account',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (permissionCheck)
+              // Actual content
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    // Back button
                     Padding(
-                      padding: const EdgeInsets.only(right: 20.0, top: 40),
-                      child: InkWell(
+                      padding: const EdgeInsets.only(left: 20.0, top: 40),
+                      child: GestureDetector(
                         onTap: () {
-                          setState(() {
-                            isSaveClick = true;
-                            _validateEmployee = false;
-                            _validateMonth = false;
-                            _validateYear = false;
-                            _validateWorkHour = false;
-                            _validatePendingHour = false;
-                            _validateOvertime = false;
-                            _errorMessage = null;
-                            selectedYear = null;
-                            selectedEmployee = " ";
-                            selectedMonth = null;
-                            isAction = false;
-                            _typeAheadCreateController.clear();
-                            yearController.clear();
-                            workedHoursController.clear();
-                            pendingHoursController.clear();
-                            overtimeHoursController.clear();
-                          });
-                          _showCreateHourAccount(context);
+                          _scaffoldKey.currentState?.openDrawer();
                         },
-                        child: Image.asset(
-                          Appimages.plusIcon,
-                          height: 24,
-                          width: 24,
+                        child: SvgPicture.asset(
+                          Appimages.menuIcon,
+                          color: Colors.white,
+                          // height: 24,
+                          // width: 24,
                         ),
                       ),
                     ),
-                ],
+
+                    const Padding(
+                      padding: EdgeInsets.only(left: 50.0, top: 40),
+                      child: Text(
+                        'Hour Account',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (permissionCheck)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 20.0, top: 40),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              isSaveClick = true;
+                              _validateEmployee = false;
+                              _validateMonth = false;
+                              _validateYear = false;
+                              _validateWorkHour = false;
+                              _validatePendingHour = false;
+                              _validateOvertime = false;
+                              _errorMessage = null;
+                              selectedYear = null;
+                              selectedEmployee = " ";
+                              selectedMonth = null;
+                              isAction = false;
+                              _typeAheadCreateController.clear();
+                              yearController.clear();
+                              workedHoursController.clear();
+                              pendingHoursController.clear();
+                              overtimeHoursController.clear();
+                            });
+                            _showCreateHourAccount(context);
+                          },
+                          child: Image.asset(
+                            Appimages.plusIcon,
+                            height: 24,
+                            width: 24,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      // AppBar(
-      //   forceMaterialTransparency: true,
-      //   backgroundColor: Colors.white,
-      //   leading: IconButton(
-      //     icon: const Icon(Icons.menu),
-      //     onPressed: () {
-      //       _scaffoldKey.currentState?.openDrawer();
-      //     },
-      //   ),
-      //   title: const Text('Hour Account',
-      //       style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      //   actions: [
-      //     Padding(
-      //       padding: const EdgeInsets.all(12.0),
-      //       child: Row(
-      //         mainAxisAlignment: MainAxisAlignment.end,
-      //         children: [
-      //           if (permissionCheck)
-      //             Container(
-      //               alignment: Alignment.centerRight,
-      //               child: ElevatedButton(
-      //                 onPressed: () {
-      //                   setState(() {
-      // isSaveClick = true;
-      // _validateEmployee = false;
-      // _validateMonth = false;
-      // _validateYear = false;
-      // _validateWorkHour = false;
-      // _validatePendingHour = false;
-      // _validateOvertime = false;
-      // _errorMessage = null;
-      // selectedYear = null;
-      // selectedEmployee = " ";
-      // selectedMonth = null;
-      // isAction = false;
-      // _typeAheadCreateController.clear();
-      // yearController.clear();
-      // workedHoursController.clear();
-      // pendingHoursController.clear();
-      // overtimeHoursController.clear();
-      //                   });
-      //                   _showCreateHourAccount(context);
-      //                 },
-      //                 style: ElevatedButton.styleFrom(
-      //                   minimumSize: const Size(75, 50),
-      //                   backgroundColor: Colors.white,
-      //                   shape: RoundedRectangleBorder(
-      //                     borderRadius: BorderRadius.circular(4.0),
-      //                     side: const BorderSide(color: Colors.red),
-      //                   ),
-      //                 ),
-      //                 child: const Text('CREATE',
-      //                     style: TextStyle(color: Colors.red)),
-      //               ),
-      //             ),
-      //           // ),
-      //         ],
-      //       ),
-      //     ),
-      //   ],
-      // ),
-      body: isLoading ? _buildLoadingWidget() : _buildEmployeeDetailsWidget(),
-      drawer: Drawer(
+        // AppBar(
+        //   forceMaterialTransparency: true,
+        //   backgroundColor: Colors.white,
+        //   leading: IconButton(
+        //     icon: const Icon(Icons.menu),
+        //     onPressed: () {
+        //       _scaffoldKey.currentState?.openDrawer();
+        //     },
+        //   ),
+        //   title: const Text('Hour Account',
+        //       style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        //   actions: [
+        //     Padding(
+        //       padding: const EdgeInsets.all(12.0),
+        //       child: Row(
+        //         mainAxisAlignment: MainAxisAlignment.end,
+        //         children: [
+        //           if (permissionCheck)
+        //             Container(
+        //               alignment: Alignment.centerRight,
+        //               child: ElevatedButton(
+        //                 onPressed: () {
+        //                   setState(() {
+        // isSaveClick = true;
+        // _validateEmployee = false;
+        // _validateMonth = false;
+        // _validateYear = false;
+        // _validateWorkHour = false;
+        // _validatePendingHour = false;
+        // _validateOvertime = false;
+        // _errorMessage = null;
+        // selectedYear = null;
+        // selectedEmployee = " ";
+        // selectedMonth = null;
+        // isAction = false;
+        // _typeAheadCreateController.clear();
+        // yearController.clear();
+        // workedHoursController.clear();
+        // pendingHoursController.clear();
+        // overtimeHoursController.clear();
+        //                   });
+        //                   _showCreateHourAccount(context);
+        //                 },
+        //                 style: ElevatedButton.styleFrom(
+        //                   minimumSize: const Size(75, 50),
+        //                   backgroundColor: Colors.white,
+        //                   shape: RoundedRectangleBorder(
+        //                     borderRadius: BorderRadius.circular(4.0),
+        //                     side: const BorderSide(color: Colors.red),
+        //                   ),
+        //                 ),
+        //                 child: const Text('CREATE',
+        //                     style: TextStyle(color: Colors.red)),
+        //               ),
+        //             ),
+        //           // ),
+        //         ],
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        body: isLoading ? _buildLoadingWidget() : _buildEmployeeDetailsWidget(),
+        drawer: AppDrawer(
+            permissionFuture: permissionFuture,
+            permissionOverview: permissionOverview,
+            permissionAttendance: permissionAttendance,
+            permissionAttendanceRequest: permissionAttendanceRequest,
+            permissionHourAccount: permissionHourAccount)
+        /* Drawer(
         child: FutureBuilder<void>(
           future: permissionChecks(),
           builder: (context, snapshot) {
@@ -2279,7 +2287,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                       ? ListTile(
                           title: const Text('Overview'),
                           onTap: () {
-                            Navigator.pushNamed(
+                            
+                            Navigator.pushReplacementNamed(
                                 context, '/attendance_overview');
                           },
                         )
@@ -2288,7 +2297,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                       ? ListTile(
                           title: const Text('Attendance'),
                           onTap: () {
-                            Navigator.pushNamed(
+                            
+                            Navigator.pushReplacementNamed(
                                 context, '/attendance_attendance');
                           },
                         )
@@ -2297,7 +2307,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                       ? ListTile(
                           title: const Text('Attendance Request'),
                           onTap: () {
-                            Navigator.pushNamed(context, '/attendance_request');
+                           
+                            Navigator.pushReplacementNamed(context, '/attendance_request');
                           },
                         )
                       : const SizedBox.shrink(),
@@ -2305,7 +2316,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
                       ? ListTile(
                           title: const Text('Hour Account'),
                           onTap: () {
-                            Navigator.pushNamed(
+                             
+                            Navigator.pushReplacementNamed(
                                 context, '/employee_hour_account');
                           },
                         )
@@ -2315,8 +2327,8 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
             }
           },
         ),
-      ),
-    );
+      ), */
+        );
   }
 
   Widget shimmerListTile() {
@@ -2513,23 +2525,19 @@ class _HourAccountFormPageState extends State<HourAccountFormPage> {
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             if (requestsCount == 0)
-              const Expanded(
+              Expanded(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.inventory_outlined,
-                        color: Colors.black,
-                        size: 92,
-                      ),
+                      SvgPicture.asset(Appimages.emptyData),
                       SizedBox(height: 20),
-                      Text(
+                      const Text(
                         "There are no records to display",
                         style: TextStyle(
-                          fontSize: 16.0,
+                          fontSize: 15.0,
                           color: Colors.black,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],

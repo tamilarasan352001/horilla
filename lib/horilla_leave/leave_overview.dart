@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'leave_request.dart';
@@ -38,6 +39,7 @@ class _LeaveOverview extends State<LeaveOverview>
   bool permissionLeaveOverviewCheck = false;
   bool permissionMyLeaveRequestCheck = false;
   bool permissionLeaveAllocationCheck = false;
+  late Future<void> permissionFuture;
 
   @override
   void dispose() {
@@ -48,6 +50,7 @@ class _LeaveOverview extends State<LeaveOverview>
   @override
   void initState() {
     super.initState();
+    permissionFuture = checkPermissions();
     getAllLeaveRequest();
     getBaseUrl();
     prefetchData();
@@ -453,9 +456,8 @@ class _LeaveOverview extends State<LeaveOverview>
                   Container(
                     decoration: BoxDecoration(
                       color: Appcolors.cardColor,
-                      border: Border.all(width: 0.1,color: Appcolors.appBlue),
+                      border: Border.all(width: 0.1, color: Appcolors.appBlue),
                       borderRadius: BorderRadius.circular(8.0),
-                    
                     ),
                     child: Column(
                       children: [
@@ -599,7 +601,15 @@ class _LeaveOverview extends State<LeaveOverview>
                 ],
               ),
       ),
-      drawer: Drawer(
+      drawer: LeaveDrawer(
+          permissionFuture: permissionFuture,
+          permissionLeaveOverviewCheck: permissionLeaveOverviewCheck,
+          permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck,
+          permissionLeaveRequestCheck: permissionLeaveRequestCheck,
+          permissionLeaveTypeCheck: permissionLeaveTypeCheck,
+          permissionLeaveAllocationCheck: permissionLeaveAllocationCheck,
+          permissionLeaveAssignCheck: permissionLeaveAssignCheck),
+      /* Drawer(
         child: FutureBuilder<void>(
           future: checkPermissions(),
           builder: (context, snapshot) {
@@ -701,7 +711,7 @@ class _LeaveOverview extends State<LeaveOverview>
             }
           },
         ),
-      ),
+      ), */
       extendBody: true,
     );
   }
@@ -736,7 +746,7 @@ Widget _buildGridItem(
   return Container(
     decoration: BoxDecoration(
       color: Appcolors.cardColor,
-        border: Border.all(width: 0.1, color: Appcolors.appBlue),
+      border: Border.all(width: 0.1, color: Appcolors.appBlue),
       borderRadius: BorderRadius.circular(14.0),
     ),
     child: Padding(

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:horilla/attendance_views/appDrawer.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
 import 'package:http/http.dart' as http;
@@ -45,6 +46,7 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
   List<Map<String, dynamic>> filteredNonValidAttendance = [];
   List<Map<String, dynamic>> filteredOvertimeAttendance = [];
   List<Map<String, dynamic>> filteredValidatedAttendance = [];
+    late Future<void> permissionFuture;
   List<String> shiftDetails = [];
   String searchText = '';
   String? _errorMessage;
@@ -117,6 +119,7 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
     getShiftDetails();
     managerChecks();
     getBaseUrl();
+    permissionFuture = permissionChecks();
     dateInput.text = "";
     checkInTime.text = "";
     checkOutTime.text = "";
@@ -3392,7 +3395,8 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
         //   ],
         // ),
         body: isLoading ? _buildLoadingWidget() : _buildEmployeeDetailsWidget(),
-        drawer: Drawer(
+        drawer: AppDrawer(permissionFuture: permissionFuture, permissionOverview: permissionOverview, permissionAttendance: permissionAttendance, permissionAttendanceRequest: permissionAttendanceRequest, permissionHourAccount: permissionHourAccount)
+        /* Drawer(
           child: FutureBuilder<void>(
             future: permissionChecks(),
             builder: (context, snapshot) {
@@ -3442,7 +3446,8 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                         ? ListTile(
                             title: const Text('Overview'),
                             onTap: () {
-                              Navigator.pushNamed(
+                             
+                              Navigator.pushReplacementNamed(
                                   context, '/attendance_overview');
                             },
                           )
@@ -3451,7 +3456,8 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                         ? ListTile(
                             title: const Text('Attendance'),
                             onTap: () {
-                              Navigator.pushNamed(
+                            
+                              Navigator.pushReplacementNamed(
                                   context, '/attendance_attendance');
                             },
                           )
@@ -3460,7 +3466,8 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                         ? ListTile(
                             title: const Text('Attendance Request'),
                             onTap: () {
-                              Navigator.pushNamed(
+                              
+                              Navigator.pushReplacementNamed(
                                   context, '/attendance_request');
                             },
                           )
@@ -3469,7 +3476,8 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                         ? ListTile(
                             title: const Text('Hour Account'),
                             onTap: () {
-                              Navigator.pushNamed(
+                               
+                              Navigator.pushReplacementNamed(
                                   context, '/employee_hour_account');
                             },
                           )
@@ -3479,7 +3487,7 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
               }
             },
           ),
-        ),
+        ), */
       ),
       // ),
     );
@@ -3672,25 +3680,21 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
               child: TabBarView(
                 children: [
                   toValidate == 0
-                      ? const Center(
+                      ? Center(
                           child: Padding(
                             padding: EdgeInsets.all(20.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.inventory_outlined,
-                                  color: Colors.black,
-                                  size: 92,
-                                ),
+                                SvgPicture.asset(Appimages.emptyData),
                                 SizedBox(height: 20),
-                                Text(
+                                const Text(
                                   "There are no attendance records to display",
                                   style: TextStyle(
-                                      fontSize: 16.0,
+                                      fontSize: 15.0,
                                       color: Colors.black,
-                                      fontWeight: FontWeight.bold),
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -3701,25 +3705,21 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                           _scrollController,
                           searchText),
                   overtime == 0
-                      ? const Center(
+                      ? Center(
                           child: Padding(
                             padding: EdgeInsets.all(20.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.inventory_outlined,
-                                  color: Colors.black,
-                                  size: 92,
-                                ),
+                                SvgPicture.asset(Appimages.emptyData),
                                 SizedBox(height: 20),
-                                Text(
+                                const Text(
                                   "There are no attendance records to display",
                                   style: TextStyle(
-                                      fontSize: 16.0,
+                                      fontSize: 15.0,
                                       color: Colors.black,
-                                      fontWeight: FontWeight.bold),
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -3730,25 +3730,21 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                           _scrollController,
                           searchText),
                   validated == 0
-                      ? const Center(
+                      ? Center(
                           child: Padding(
                             padding: EdgeInsets.all(20.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.inventory_outlined,
-                                  color: Colors.black,
-                                  size: 92,
-                                ),
+                                SvgPicture.asset(Appimages.emptyData),
                                 SizedBox(height: 20),
-                                Text(
+                                const Text(
                                   "There are no attendance records to display",
                                   style: TextStyle(
-                                      fontSize: 16.0,
+                                      fontSize: 15.0,
                                       color: Colors.black,
-                                      fontWeight: FontWeight.bold),
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -4472,8 +4468,7 @@ class _AttendanceAttendance extends State<AttendanceAttendance>
                                   });
                                   _showValidateAttendance(context, record);
                                 },
-                                child:
-                                 Container(
+                                child: Container(
                                   width: 24,
                                   height: 24,
                                   decoration: BoxDecoration(

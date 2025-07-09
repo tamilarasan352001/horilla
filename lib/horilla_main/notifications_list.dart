@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:horilla/common/appColors.dart';
+import 'package:horilla/common/appimages.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -38,7 +41,7 @@ class _NotificationsListState extends State<NotificationsList> {
 
   void _scrollListener() {
     if (_scrollController.offset >=
-        _scrollController.position.maxScrollExtent &&
+            _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange) {
       currentPage++;
       fetchNotifications();
@@ -127,7 +130,7 @@ class _NotificationsListState extends State<NotificationsList> {
     } else {
       currentPage = 1;
       var uri =
-      Uri.parse('$typedServerUrl/api/notifications/notifications/list/all');
+          Uri.parse('$typedServerUrl/api/notifications/notifications/list/all');
       var response = await http.get(uri, headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token",
@@ -197,7 +200,82 @@ class _NotificationsListState extends State<NotificationsList> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(115),
+        child: Stack(
+          children: [
+            // Blue background layer
+            Container(
+              height: 115,
+              decoration: const BoxDecoration(
+                color: Appcolors.appBlue,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+            ),
+
+            Positioned(
+              child: Image.asset(
+                width: 200,
+                Appimages.appbar,
+                fit: BoxFit.cover,
+              ),
+            ),
+            // Actual content
+            Positioned.fill(
+              child: Row(
+                children: [
+                  // Back button
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20.0, top: 40),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: SvgPicture.asset(
+                        Appimages.leftArrow,
+                        color: Colors.white,
+                        // height: 24,
+                        // width: 24,
+                      ),
+                    ),
+                  ),
+
+                  const Padding(
+                    padding: EdgeInsets.only(left: 50.0, top: 40),
+                    child: Text(
+                      'Notifications',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+
+                  Padding(
+                    padding: const EdgeInsets.only(right: 20.0, top: 40),
+                    child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            clearAllNotification();
+                          });
+                        },
+                        child: const Text(
+                          'Clear all',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        )),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      /*  appBar: AppBar(
         backgroundColor: Colors.white,
         title:
         const Text('Notifications', style: TextStyle(color: Colors.black)),
@@ -228,97 +306,103 @@ class _NotificationsListState extends State<NotificationsList> {
             ),
           ),
         ],
-      ),
+      ), */
       body: Padding(
         padding: EdgeInsets.symmetric(
             horizontal: MediaQuery.of(context).size.width * 0.0357),
         child: Center(
           child: isLoading
               ? Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
-            child: ListView.builder(
-              itemCount: 20,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: MediaQuery.of(context).size.width * 0.05,
-                        height: MediaQuery.of(context).size.height * 0.02,
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: ListView.builder(
+                    itemCount: 20,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
-                          color: Colors.grey[300]!,
-                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
                         ),
-                      ),
-                      const SizedBox(width: 16.0),
-                      Expanded(
-                        child: Column(
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              width: double.infinity,
-                              height: 12.0,
-                              color: Colors.grey[300],
+                              width: MediaQuery.of(context).size.width * 0.05,
+                              height: MediaQuery.of(context).size.height * 0.02,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300]!,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                            const SizedBox(height: 8.0),
-                            Container(
-                              width:
-                              MediaQuery.of(context).size.width * 0.4,
-                              height: 12.0,
-                              color: Colors.grey[300],
+                            const SizedBox(width: 16.0),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    height: 12.0,
+                                    color: Colors.grey[300],
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Container(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.4,
+                                    height: 12.0,
+                                    color: Colors.grey[300],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-          )
+                )
               : notifications.isEmpty
-              ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.notifications,
-                  color: Colors.black,
-                  size: 92,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "There are no notification records to display",
-                  style: TextStyle(
-                      fontSize:
-                      MediaQuery.of(context).size.width * 0.0357,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          )
-              : ListView.builder(
-            controller: _scrollController,
-            // shrinkWrap: true,
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              final record = notifications[index];
-              if (record['verb'] != null) {
-                return buildListItem(context, record, index);
-              } else {
-                return Container();
-              }
-            },
-          ),
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgPicture.asset(Appimages.emptyData),
+                          const SizedBox(height: 20),
+                          Text(
+                            "There are no notification records to display",
+                            style: TextStyle(
+                                fontSize:
+                                    MediaQuery.of(context).size.width * 0.0357,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        SizedBox(
+                          height: 15,
+                        ),
+                        Expanded(
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            controller: _scrollController,
+                            // shrinkWrap: true,
+                            itemCount: notifications.length,
+                            itemBuilder: (context, index) {
+                              final record = notifications[index];
+                              if (record['verb'] != null) {
+                                return buildListItem(context, record, index);
+                              } else {
+                                return Container();
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
         ),
       ),
     );
@@ -330,78 +414,83 @@ class _NotificationsListState extends State<NotificationsList> {
     final timeAgo = timeago.format(timestamp);
     final user = arguments['employee_name'];
 
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.0),
-            color: Colors.white,
-          ),
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width * 0.0357,
-                  vertical: 2.0,
-                ),
-                leading: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (record['unread'] == true)
-                      Container(
-                        width: MediaQuery.of(context).size.width * 0.05,
-                        height: MediaQuery.of(context).size.height * 0.02,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.circle,
-                          color: Colors.red,
-                          size: 17,
-                        ),
-                      ),
-                    if (record['unread'] == false)
-                      Container(
-                        width: MediaQuery.of(context).size.width * 0.05,
-                        height: MediaQuery.of(context).size.height * 0.02,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                  ],
-                ),
-                title: Text(
-                  record['verb'],
-                  style: TextStyle(
-                    fontSize: MediaQuery.of(context).size.width * 0.035,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+    return Column(
+      children: [
+        Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.0),
+              color: Appcolors.cardColor,
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.symmetric(
+                    //horizontal: MediaQuery.of(context).size.width * 0.0357,
+                    vertical: 2.0,
                   ),
-                ),
-                subtitle: Text(
-                  '$timeAgo by User $user',
-                  style: TextStyle(
+                  leading: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (record['unread'] == true)
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.05,
+                          height: MediaQuery.of(context).size.height * 0.02,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.circle,
+                            color: Colors.red,
+                            size: 17,
+                          ),
+                        ),
+                      if (record['unread'] == false)
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.05,
+                          height: MediaQuery.of(context).size.height * 0.02,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                  title: Text(
+                    record['verb'],
+                    style: TextStyle(
                       fontSize: MediaQuery.of(context).size.width * 0.035,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade400),
-                ),
-                trailing: IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    size: MediaQuery.of(context).size.width * 0.04,
-                    color: Colors.grey,
+                      color: Colors.black,
+                    ),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      var notificationId = record['id'];
-                      deleteIndividualNotification(notificationId);
-                    });
-                  },
+                  subtitle: Text(
+                    '$timeAgo by User $user',
+                    style: TextStyle(
+                        fontSize: MediaQuery.of(context).size.width * 0.035,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade400),
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      size: MediaQuery.of(context).size.width * 0.04,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        var notificationId = record['id'];
+                        deleteIndividualNotification(notificationId);
+                      });
+                    },
+                  ),
                 ),
-              ),
-              Divider(height: 1.0, color: Colors.grey[400]?.withOpacity(0.2))
-            ],
-          )),
+
+                // Divider(height: 1.0, color: Colors.grey[400]?.withOpacity(0.2))
+              ],
+            )),
+        SizedBox(
+          height: 8,
+        )
+      ],
     );
   }
 }

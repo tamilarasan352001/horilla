@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:multiselect_dropdown_flutter/multiselect_dropdown_flutter.dart';
@@ -43,10 +44,12 @@ class _SelectedLeaveType extends State<SelectedLeaveType> {
   bool permissionLeaveOverviewCheck = false;
   bool permissionMyLeaveRequestCheck = false;
   bool permissionLeaveAllocationCheck = false;
+  late Future<void> permissionFuture;
 
   @override
   void initState() {
     super.initState();
+    permissionFuture = checkPermissions();
     getSelectedLeaveType();
     getAllAssignedLeave();
     getAssignedLeaveType();
@@ -352,68 +355,68 @@ class _SelectedLeaveType extends State<SelectedLeaveType> {
     typeId = args['selectedTypeId'].toInt();
     String typeName = args['selectedTypeName']!.toString();
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(115),
-        child: Stack(
-          children: [
-            // Blue background layer
-            Container(
-              height: 115,
-              decoration: const BoxDecoration(
-                color: Appcolors.appBlue,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+        key: _scaffoldKey,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(115),
+          child: Stack(
+            children: [
+              // Blue background layer
+              Container(
+                height: 115,
+                decoration: const BoxDecoration(
+                  color: Appcolors.appBlue,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
                 ),
               ),
-            ),
 
-            Positioned(
-              child: Image.asset(
-                width: 200,
-                Appimages.appbar,
-                fit: BoxFit.cover,
+              Positioned(
+                child: Image.asset(
+                  width: 200,
+                  Appimages.appbar,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            // Actual content
-            Positioned.fill(
-              child: Row(
-                children: [
-                  // Back button
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20.0, top: 40),
-                    child: GestureDetector(
-                      onTap: () {
-                        _scaffoldKey.currentState?.openDrawer();
-                      },
-                      child: SvgPicture.asset(
-                        Appimages.menuIcon,
-                        color: Colors.white,
-                        // height: 24,
-                        // width: 24,
+              // Actual content
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    // Back button
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20.0, top: 40),
+                      child: GestureDetector(
+                        onTap: () {
+                          _scaffoldKey.currentState?.openDrawer();
+                        },
+                        child: SvgPicture.asset(
+                          Appimages.menuIcon,
+                          color: Colors.white,
+                          // height: 24,
+                          // width: 24,
+                        ),
                       ),
                     ),
-                  ),
 
-                  Padding(
-                    padding: EdgeInsets.only(left: 50.0, top: 40),
-                    child: Text(
-                      '${typeDetails['name'] ?? args['selectedTypeName']}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
+                    Padding(
+                      padding: EdgeInsets.only(left: 50.0, top: 40),
+                      child: Text(
+                        '${typeDetails['name'] ?? args['selectedTypeName']}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      /* appBar: AppBar(
+        /* appBar: AppBar(
         forceMaterialTransparency: true,
         backgroundColor: Colors.white,
         leading: IconButton(
@@ -429,542 +432,575 @@ class _SelectedLeaveType extends State<SelectedLeaveType> {
           const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ), */
-      body: Padding(
-        padding: const EdgeInsets.all(25.0),
-        child: isLoading
-            ? Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(20.0, 0.0, 16.0, 15.0),
+        body: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: isLoading
+              ? Shimmer.fromColors(
+                  baseColor: Colors.grey[300]!,
+                  highlightColor: Colors.grey[100]!,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20.0, 0.0, 16.0, 15.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: ListView.builder(
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Container(
+                            width: double.infinity,
+                            height: 40,
+                            color: Colors.grey,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                )
+              : Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+                    color: Appcolors.cardColor,
+                    border: Border.all(color: Colors.grey.shade200),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  child: ListView.builder(
-                    itemCount: 10,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Container(
-                          width: double.infinity,
-                          height: 40,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              )
-            : Container(
-                decoration: BoxDecoration(
-                  color: Appcolors.cardColor,
-                  border: Border.all(color: Colors.grey.shade200),
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: SingleChildScrollView(
-                  child: Container(
-                    // color:Colors.white,
-                    padding: const EdgeInsets.fromLTRB(20.0, 0.0, 16.0, 15.0),
-                    width: MediaQuery.of(context).size.width * 0.95,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.04),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              width: 40.0,
-                              height: 40.0,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Appcolors.appBlue.withOpacity(0.2), width: 1.0),
-                              ),
-                              child: Stack(
-                                children: [
-                                  if (typeDetails['icon'] != null &&
-                                      typeDetails['icon'].isNotEmpty)
-                                    Positioned.fill(
-                                      child: ClipOval(
-                                        child: Image.network(
-                                          baseUrl + typeDetails['icon'],
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (BuildContext context,
-                                              Object exception,
-                                              StackTrace? stackTrace) {
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Image.asset(
-                                                  Appimages.calendarIcon),
-                                            );
-                                          },
+                  child: SingleChildScrollView(
+                    child: Container(
+                      // color:Colors.white,
+                      padding: const EdgeInsets.fromLTRB(20.0, 0.0, 16.0, 15.0),
+                      width: MediaQuery.of(context).size.width * 0.95,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.04),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                width: 40.0,
+                                height: 40.0,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Appcolors.appBlue.withOpacity(0.2),
+                                      width: 1.0),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    if (typeDetails['icon'] != null &&
+                                        typeDetails['icon'].isNotEmpty)
+                                      Positioned.fill(
+                                        child: ClipOval(
+                                          child: Image.network(
+                                            baseUrl + typeDetails['icon'],
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (BuildContext context,
+                                                Object exception,
+                                                StackTrace? stackTrace) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Image.asset(
+                                                    Appimages.calendarIcon),
+                                              );
+                                            },
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  if (typeDetails['icon'] == null ||
-                                      typeDetails['icon'].isEmpty)
-                                    Positioned.fill(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Appcolors.profileBg,
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Image.asset(
-                                              Appimages.calendarIcon),
+                                    if (typeDetails['icon'] == null ||
+                                        typeDetails['icon'].isEmpty)
+                                      Positioned.fill(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Appcolors.profileBg,
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Image.asset(
+                                                Appimages.calendarIcon),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 16.0),
-                            Expanded(
-                              child: Text(
-                                typeDetails['name'] ?? "Unknown",
-                                style: const TextStyle(
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.w500),
-                                maxLines: 2,
+                              const SizedBox(width: 16.0),
+                              Expanded(
+                                child: Text(
+                                  typeDetails['name'] ?? "Unknown",
+                                  style: const TextStyle(
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.w500),
+                                  maxLines: 2,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.04),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Period In',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['period_in'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Count',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['count'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Total Days',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['total_days'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Reset',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['reset'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Carryforward Type',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['carryforward_type'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Is Paid',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['payment'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Require Approval',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['require_approval'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Require Attachment',
-                              style:
-                                  TextStyle(fontSize: 16.0, color: Colors.grey),
-                            ),
-                            Text(
-                              '${typeDetails['require_attachment'] ?? "Unknown"}',
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.00),
-                        const Divider(
-                          thickness: 0.0,
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.05),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Visibility(
-                              visible: employeeItems.isNotEmpty,
-                              child: Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    setState(() {
-                                      isAction =
-                                          false; // Hide loading indicator
-                                    });
-                                    setState(() {
-                                      selectedEmployeeNames.clear();
-                                    });
-                                    setState(() {});
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (BuildContext context) {
-                                        return StatefulBuilder(
-                                          builder: (context, setState) {
-                                            return Stack(
-                                              children: [
-                                                AlertDialog(
-                                                  backgroundColor: Appcolors.cardColor,
-                                                  title: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      const Text(
-                                                        "Assign Leave",
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                              fontSize: 21,
-                                                          color: Colors.black,
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.04),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Period In',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['period_in'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Count',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['count'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Total Days',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['total_days'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Reset',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['reset'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Carryforward Type',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['carryforward_type'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Is Paid',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['payment'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Require Approval',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['require_approval'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Require Attachment',
+                                style: TextStyle(
+                                    fontSize: 16.0, color: Colors.grey),
+                              ),
+                              Text(
+                                '${typeDetails['require_attachment'] ?? "Unknown"}',
+                                style: const TextStyle(fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.00),
+                          const Divider(
+                            thickness: 0.0,
+                          ),
+                          SizedBox(
+                              height:
+                                  MediaQuery.of(context).size.height * 0.05),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Visibility(
+                                visible: employeeItems.isNotEmpty,
+                                child: Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      setState(() {
+                                        isAction =
+                                            false; // Hide loading indicator
+                                      });
+                                      setState(() {
+                                        selectedEmployeeNames.clear();
+                                      });
+                                      setState(() {});
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return StatefulBuilder(
+                                            builder: (context, setState) {
+                                              return Stack(
+                                                children: [
+                                                  AlertDialog(
+                                                    backgroundColor:
+                                                        Appcolors.cardColor,
+                                                    title: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        const Text(
+                                                          "Assign Leave",
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            fontSize: 21,
+                                                            color: Colors.black,
+                                                          ),
                                                         ),
-                                                      ),
-                                                      IconButton(
-                                                        icon: const Icon(
-                                                            Icons.close,
-                                                            color: Colors.grey),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  content: Container(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.8,
-                                                    height:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .height *
-                                                            0.3,
-                                                    constraints: BoxConstraints(
-                                                      maxHeight:
+                                                        IconButton(
+                                                          icon: const Icon(
+                                                              Icons.close,
+                                                              color:
+                                                                  Colors.grey),
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop();
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    content: Container(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.8,
+                                                      height:
                                                           MediaQuery.of(context)
                                                                   .size
                                                                   .height *
-                                                              0.8,
-                                                    ),
-                                                    child:
-                                                        SingleChildScrollView(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          const Text(
-                                                            "Employee\n",
-                                                            style: TextStyle(
-                                                                fontSize: 15.0),
-                                                          ),
-                                                          Wrap(
-                                                            spacing: 8.0,
-                                                            runSpacing: 8.0,
-                                                            children: [
-                                                              for (int i = 0;
-                                                                  i <
-                                                                      selectedEmployeeNames
-                                                                          .length;
-                                                                  i++)
-                                                                Chip(
-                                                                  label: Text(
-                                                                      selectedEmployeeNames[
-                                                                          i]),
-                                                                  onDeleted:
-                                                                      () {
-                                                                    setState(
+                                                              0.3,
+                                                      constraints:
+                                                          BoxConstraints(
+                                                        maxHeight:
+                                                            MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .height *
+                                                                0.8,
+                                                      ),
+                                                      child:
+                                                          SingleChildScrollView(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            const Text(
+                                                              "Employee\n",
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      15.0),
+                                                            ),
+                                                            Wrap(
+                                                              spacing: 8.0,
+                                                              runSpacing: 8.0,
+                                                              children: [
+                                                                for (int i = 0;
+                                                                    i <
+                                                                        selectedEmployeeNames
+                                                                            .length;
+                                                                    i++)
+                                                                  Chip(
+                                                                    label: Text(
+                                                                        selectedEmployeeNames[
+                                                                            i]),
+                                                                    onDeleted:
                                                                         () {
-                                                                      selectedEmployeeNames
-                                                                          .removeAt(
-                                                                              i);
-                                                                      selectedEmployeeIds
-                                                                          .removeAt(
-                                                                              i);
-                                                                    });
-                                                                  },
-                                                                ),
-                                                            ],
-                                                          ),
-                                                          SizedBox(
-                                                              height: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .height *
-                                                                  0.01),
-                                                          MultiSelectDropdown
-                                                              .simpleList(
-                                                            list: employeeItems,
-                                                            initiallySelected: const [],
-                                                            onChange:
-                                                                (selectedItems) {
-                                                              setState(() {
-                                                                selectedEmployeeNames
-                                                                    .clear();
-                                                                selectedEmployeeIds
-                                                                    .clear();
-                                                                if (selectedItems
-                                                                    .contains(
-                                                                        'Select All')) {
-                                                                  selectedEmployeeNames =
-                                                                      List.from(
-                                                                          employeeItems);
-                                                                  selectedEmployeeIds =
-                                                                      List.from(
-                                                                          employeeItemsId);
+                                                                      setState(
+                                                                          () {
+                                                                        selectedEmployeeNames
+                                                                            .removeAt(i);
+                                                                        selectedEmployeeIds
+                                                                            .removeAt(i);
+                                                                      });
+                                                                    },
+                                                                  ),
+                                                              ],
+                                                            ),
+                                                            SizedBox(
+                                                                height: MediaQuery.of(
+                                                                            context)
+                                                                        .size
+                                                                        .height *
+                                                                    0.01),
+                                                            MultiSelectDropdown
+                                                                .simpleList(
+                                                              list:
+                                                                  employeeItems,
+                                                              initiallySelected: const [],
+                                                              onChange:
+                                                                  (selectedItems) {
+                                                                setState(() {
                                                                   selectedEmployeeNames
-                                                                      .remove(
-                                                                          'Select All');
-                                                                } else {
-                                                                  for (var item
-                                                                      in selectedItems) {
+                                                                      .clear();
+                                                                  selectedEmployeeIds
+                                                                      .clear();
+                                                                  if (selectedItems
+                                                                      .contains(
+                                                                          'Select All')) {
+                                                                    selectedEmployeeNames =
+                                                                        List.from(
+                                                                            employeeItems);
+                                                                    selectedEmployeeIds =
+                                                                        List.from(
+                                                                            employeeItemsId);
                                                                     selectedEmployeeNames
-                                                                        .add(
-                                                                            item);
-                                                                    int index =
-                                                                        employeeItems
-                                                                            .indexOf(item);
-                                                                    if (index !=
-                                                                        -1) {
-                                                                      selectedEmployeeIds.add(
-                                                                          employeeItemsId[
-                                                                              index]);
+                                                                        .remove(
+                                                                            'Select All');
+                                                                  } else {
+                                                                    for (var item
+                                                                        in selectedItems) {
+                                                                      selectedEmployeeNames
+                                                                          .add(
+                                                                              item);
+                                                                      int index =
+                                                                          employeeItems
+                                                                              .indexOf(item);
+                                                                      if (index !=
+                                                                          -1) {
+                                                                        selectedEmployeeIds
+                                                                            .add(employeeItemsId[index]);
+                                                                      }
                                                                     }
                                                                   }
-                                                                }
-                                                              });
-                                                            },
-                                                            includeSearch: true,
-                                                            includeSelectAll:
-                                                                true,
-                                                            isLarge: false,
-                                                            checkboxFillColor:
-                                                                Colors.grey,
-                                                            boxDecoration:
-                                                                BoxDecoration(
-                                                              border: Border.all(
-                                                                  color: Colors
-                                                                      .redAccent),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
+                                                                });
+                                                              },
+                                                              includeSearch:
+                                                                  true,
+                                                              includeSelectAll:
+                                                                  true,
+                                                              isLarge: false,
+                                                              checkboxFillColor:
+                                                                  Colors.grey,
+                                                              boxDecoration:
+                                                                  BoxDecoration(
+                                                                border: Border.all(
+                                                                    color: Colors
+                                                                        .redAccent),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10),
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  actions: [
-                                                    SizedBox(
-                                                      width: double.infinity,
-                                                      child: ElevatedButton(
-                                                        onPressed: () async {
-                                                          setState(() {
-                                                            isAction = true;
-                                                          });
-                                                          await assignLeave(
-                                                              selectedEmployeeIds,
-                                                              typeName);
-                                                          setState(() {
-                                                            isAction = false;
-                                                          });
-                                                          getAssignedLeaveType();
-                                                          Navigator.of(context)
-                                                              .pop(true);
-                                                          showAssignAnimation();
-                                                        },
-                                                        style: ButtonStyle(
-                                                          backgroundColor:
-                                                              MaterialStateProperty
-                                                                  .all<Color>(
-                                                                      Colors
-                                                                          .green),
-                                                          shape: MaterialStateProperty
-                                                              .all<
-                                                                  RoundedRectangleBorder>(
-                                                            RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          6.0),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        child: const Text(
-                                                          'Assign',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
+                                                          ],
                                                         ),
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
-                                                if (isAction)
-                                                  const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
+                                                    actions: [
+                                                      SizedBox(
+                                                        width: double.infinity,
+                                                        child: ElevatedButton(
+                                                          onPressed: () async {
+                                                            setState(() {
+                                                              isAction = true;
+                                                            });
+                                                            await assignLeave(
+                                                                selectedEmployeeIds,
+                                                                typeName);
+                                                            setState(() {
+                                                              isAction = false;
+                                                            });
+                                                            getAssignedLeaveType();
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(true);
+                                                            showAssignAnimation();
+                                                          },
+                                                          style: ButtonStyle(
+                                                            backgroundColor:
+                                                                MaterialStateProperty
+                                                                    .all<Color>(
+                                                                        Colors
+                                                                            .green),
+                                                            shape: MaterialStateProperty
+                                                                .all<
+                                                                    RoundedRectangleBorder>(
+                                                              RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            6.0),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          child: const Text(
+                                                            'Assign',
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .white),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      },
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.0),
+                                                  if (isAction)
+                                                    const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 50, vertical: 12),
                                     ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 50, vertical: 12),
-                                  ),
-                                  child: const Text(
-                                    'Assign',
-                                    style: TextStyle(
-                                        fontSize: 18, color: Colors.white),
+                                    child: const Text(
+                                      'Assign',
+                                      style: TextStyle(
+                                          fontSize: 18, color: Colors.white),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-      ),
-      drawer: Drawer(
+        ),
+        drawer: LeaveDrawer(
+            permissionFuture: permissionFuture,
+            permissionLeaveOverviewCheck: permissionLeaveOverviewCheck,
+            permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck,
+            permissionLeaveRequestCheck: permissionLeaveRequestCheck,
+            permissionLeaveTypeCheck: permissionLeaveTypeCheck,
+            permissionLeaveAllocationCheck: permissionLeaveAllocationCheck,
+            permissionLeaveAssignCheck: permissionLeaveAssignCheck)
+        /* Drawer(
         child: FutureBuilder<void>(
           future: checkPermissions(),
           builder: (context, snapshot) {
@@ -1068,8 +1104,8 @@ class _SelectedLeaveType extends State<SelectedLeaveType> {
             }
           },
         ),
-      ),
-    );
+      ), */
+        );
   }
 }
 

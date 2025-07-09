@@ -936,7 +936,7 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                               }
                             },
                             decoration: InputDecoration(
-                                  suffixIcon: Padding(
+                              suffixIcon: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Image.asset(
                                   Appimages.calendarIcon,
@@ -1337,7 +1337,10 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                             decoration: InputDecoration(
                               prefixIcon: Padding(
                                 padding: const EdgeInsets.all(12.0),
-                                child: Image.asset(Appimages.calendarIcon,width: 5,),
+                                child: Image.asset(
+                                  Appimages.calendarIcon,
+                                  width: 5,
+                                ),
                               ),
                               border: const OutlineInputBorder(),
                               labelText: 'Select Start Date',
@@ -1349,7 +1352,6 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                                   const EdgeInsets.symmetric(horizontal: 10.0),
                               hintText: 'Select a Start Date',
                             ),
-                            
                           ),
                           SizedBox(
                               height:
@@ -2116,15 +2118,15 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Title',
-                           
-                                ),
+                        const Text(
+                          'Title',
+                        ),
                         Flexible(
                           child: Text(
                             record['rotating_shift_name'] != null
                                 ? record['rotating_shift_name'].toString()
                                 : "None",
-                                  style: TextStyle(fontWeight: FontWeight.w500),
+                            style: TextStyle(fontWeight: FontWeight.w500),
                             textAlign: TextAlign.right,
                             softWrap: true,
                           ),
@@ -2134,14 +2136,14 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Start Date',
-                          
-                                ),
+                        const Text(
+                          'Start Date',
+                        ),
                         Text(
                           record['start_date'] != null
                               ? record['start_date'].toString()
                               : "None",
-                                style: TextStyle(fontWeight: FontWeight.w500),
+                          style: TextStyle(fontWeight: FontWeight.w500),
                           textAlign: TextAlign.right,
                         ),
                       ],
@@ -2149,14 +2151,14 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Current Shift',
-                           
-                                ),
+                        const Text(
+                          'Current Shift',
+                        ),
                         Text(
                           record['current_shift_name'] != null
                               ? record['current_shift_name'].toString()
                               : "None",
-                                style: TextStyle(fontWeight: FontWeight.w500),
+                          style: TextStyle(fontWeight: FontWeight.w500),
                           textAlign: TextAlign.right,
                         ),
                       ],
@@ -2164,13 +2166,14 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Next Switch',
-                          ),
+                        const Text(
+                          'Next Switch',
+                        ),
                         Text(
                           record['next_change_date'] != null
                               ? record['next_change_date'].toString()
                               : "None",
-                                style: TextStyle(fontWeight: FontWeight.w500),
+                          style: TextStyle(fontWeight: FontWeight.w500),
                           textAlign: TextAlign.right,
                         ),
                       ],
@@ -2178,14 +2181,14 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Next Shift',
-                          
-                                ),
+                        const Text(
+                          'Next Shift',
+                        ),
                         Text(
                           record['next_shift_name'] != null
                               ? record['next_shift_name'].toString()
                               : "None",
-                                style: TextStyle(fontWeight: FontWeight.w500),
+                          style: TextStyle(fontWeight: FontWeight.w500),
                           textAlign: TextAlign.right,
                         ),
                       ],
@@ -2396,23 +2399,19 @@ class _WorkTypeRequestPageState extends State<RotatingShiftPage> {
     return Column(
       children: [
         if (requestsCount == 0)
-          const Expanded(
+          Expanded(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.inventory_outlined,
-                    color: Colors.black,
-                    size: 92,
-                  ),
+                  SvgPicture.asset(Appimages.emptyData),
                   SizedBox(height: 20),
-                  Text(
+                  const Text(
                     "There are no records to display",
                     style: TextStyle(
-                      fontSize: 16.0,
+                      fontSize: 15.0,
                       color: Colors.black,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],

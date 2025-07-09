@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
@@ -75,6 +76,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
   bool permissionLeaveOverviewCheck = false;
   bool permissionMyLeaveRequestCheck = false;
   bool permissionLeaveAllocationCheck = false;
+     late Future<void> permissionFuture;
   bool _isShimmer = true;
   XFile? pickedFile;
   String fileName = '';
@@ -89,6 +91,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
   late String baseUrl = '';
   late Map<String, dynamic> arguments;
   late TabController _tabController;
+  bool _isDialogOpen = false;
+
   var employeeItems = [''];
   var leaveItems = [''];
 
@@ -96,6 +100,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    permissionFuture = checkPermissions();
     description.text = "";
     getAllEmployeesName();
     prefetchData();
@@ -699,14 +704,15 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
             return Stack(
               children: [
                 AlertDialog(
-                  backgroundColor: Colors.white,
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  backgroundColor: Appcolors.cardColor,
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text("Edit Allocation",
                           style: TextStyle(
                               fontSize: 21,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               color: Colors.black)),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.grey),
@@ -738,6 +744,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             "Leave Type",
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -746,7 +754,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeAheadEditController,
                               decoration: InputDecoration(
-                                labelText: 'Choose a Leave Type',
+                                hintText: 'Choose a Leave Type',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 border: const OutlineInputBorder(),
                                 contentPadding: const EdgeInsets.symmetric(
@@ -805,7 +813,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Employee"),
+                            child: Text(
+                              "Employee",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
                           ),
                           SizedBox(
                               height:
@@ -814,7 +826,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeEditEmployeeController,
                               decoration: InputDecoration(
-                                labelText: 'Search Employee',
+                                hintText: 'Search Employee',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
@@ -872,7 +884,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             "Requested Days",
-                            style: TextStyle(color: Colors.black),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -884,7 +897,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               border: const OutlineInputBorder(),
                               contentPadding: const EdgeInsets.symmetric(
                                   vertical: 10.0, horizontal: 10.0),
-                              labelText: 'Requested Days',
+                              hintText: 'Requested Days',
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               errorText: _validateDays
                                   ? 'Please enter Requested Days'
@@ -940,7 +953,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Description"),
+                            child: Text(
+                              "Description",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
                           ),
                           SizedBox(
                               height:
@@ -1048,6 +1065,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   ),
                   actions: [
                     SizedBox(
+                      height: 48,
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () async {
@@ -1092,12 +1110,12 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           }
                         },
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.red),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Appcolors.appBlue),
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6.0),
+                              borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
                         ),
@@ -1888,14 +1906,16 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
             return Stack(
               children: [
                 AlertDialog(
-                  backgroundColor: Colors.white,
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  backgroundColor: Appcolors.cardColor,
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Add Allocation',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black)),
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                              fontSize: 21)),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.grey),
                         onPressed: () {
@@ -1923,7 +1943,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             ),
                           SizedBox(
                               height: MediaQuery.of(context).size.width * 0.03),
-                          const Text("Leave Type"),
+                          const Text(
+                            "Leave Type",
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
                           SizedBox(
                               height:
                                   MediaQuery.of(context).size.height * 0.01),
@@ -1931,7 +1955,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeAheadAddController,
                               decoration: InputDecoration(
-                                labelText: 'Choose a Leave Type',
+                                hintText: 'Choose a Leave Type',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 border: const OutlineInputBorder(),
                                 contentPadding: const EdgeInsets.symmetric(
@@ -1990,7 +2014,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Padding(
                             padding: EdgeInsets.all(4.0),
-                            child: Text("Employee"),
+                            child: Text(
+                              "Employee",
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
                           ),
                           SizedBox(
                               height:
@@ -1999,7 +2027,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             textFieldConfiguration: TextFieldConfiguration(
                               controller: _typeAddEmployeeController,
                               decoration: InputDecoration(
-                                labelText: 'Search Employee',
+                                hintText: 'Search Employee',
                                 labelStyle: TextStyle(color: Colors.grey[350]),
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 10.0),
@@ -2057,7 +2085,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             "Requested Days",
-                            style: TextStyle(color: Colors.black),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -2069,7 +2098,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               border: const OutlineInputBorder(),
                               contentPadding: const EdgeInsets.symmetric(
                                   vertical: 10.0, horizontal: 10.0),
-                              labelText: 'Requested Days',
+                              hintText: 'Requested Days',
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               errorText: _validateDays
                                   ? 'Please enter Requested Days'
@@ -2123,7 +2152,11 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           SizedBox(
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
-                          const Text("Description"),
+                          const Text(
+                            "Description",
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
                           SizedBox(
                               height:
                                   MediaQuery.of(context).size.height * 0.01),
@@ -2131,7 +2164,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                             controller: allocationDescription,
                             decoration: InputDecoration(
                               border: const OutlineInputBorder(),
-                              labelText: "Description",
+                              hintText: "Description",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               contentPadding:
                                   const EdgeInsets.symmetric(horizontal: 10.0),
@@ -2197,6 +2230,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                   ),
                   actions: <Widget>[
                     SizedBox(
+                      height: 48,
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () async {
@@ -2278,8 +2312,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           }
                         },
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.red),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Appcolors.appBlue),
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -2482,7 +2516,8 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
         body: _isShimmerVisible
             ? _buildLoadingWidget()
             : _buildAllocationRequestWidget(),
-        drawer: Drawer(
+        drawer: LeaveDrawer(permissionFuture: permissionFuture, permissionLeaveOverviewCheck: permissionLeaveOverviewCheck, permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck, permissionLeaveRequestCheck: permissionLeaveRequestCheck, permissionLeaveTypeCheck: permissionLeaveTypeCheck, permissionLeaveAllocationCheck: permissionLeaveAllocationCheck, permissionLeaveAssignCheck: permissionLeaveAssignCheck)
+        /* Drawer(
           child: FutureBuilder<void>(
             future: checkPermissions(),
             builder: (context, snapshot) {
@@ -2586,7 +2621,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
               }
             },
           ),
-        ),
+        ), */
       ),
     );
   }
@@ -2690,25 +2725,21 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
       tabViews = [
         leaveAllocationRequestCount == 0
             ? ListView(
-                children: const [
+                children: [
                   Padding(
                     padding: EdgeInsets.only(top: 40.0),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.lock_clock,
-                            color: Colors.black,
-                            size: 92,
-                          ),
+                          SvgPicture.asset(Appimages.emptyData),
                           SizedBox(height: 20),
-                          Text(
+                          const Text(
                             "There are no records to display",
                             style: TextStyle(
-                                fontSize: 16.0,
+                                fontSize: 15.0,
                                 color: Colors.black,
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -2719,25 +2750,21 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
             : buildTabContent(allRequests),
         myLeaveAllocationCount == 0
             ? ListView(
-                children: const [
+                children: [
                   Padding(
                     padding: EdgeInsets.only(top: 40.0),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.lock_clock,
-                            color: Colors.black,
-                            size: 92,
-                          ),
+                          SvgPicture.asset(Appimages.emptyData),
                           SizedBox(height: 20),
-                          Text(
+                          const Text(
                             "There are no records to display",
                             style: TextStyle(
-                                fontSize: 16.0,
+                                fontSize: 15.0,
                                 color: Colors.black,
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -2754,25 +2781,21 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
       tabViews = [
         myLeaveAllocationCount == 0
             ? ListView(
-                children: const [
+                children: [
                   Padding(
                     padding: EdgeInsets.only(top: 40.0),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.lock_clock,
-                            color: Colors.black,
-                            size: 92,
-                          ),
+                          SvgPicture.asset(Appimages.emptyData),
                           SizedBox(height: 20),
-                          Text(
+                          const Text(
                             "There are no records to display",
                             style: TextStyle(
-                                fontSize: 16.0,
+                                fontSize: 15.0,
                                 color: Colors.black,
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -2991,19 +3014,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
             return StatefulBuilder(
                 builder: (BuildContext context, StateSetter setState) {
               return AlertDialog(
-                backgroundColor: Colors.white,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(" "),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                ),
+                backgroundColor: Appcolors.cardColor,
                 content: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.95,
                   height: MediaQuery.of(context).size.height * 0.4,
@@ -3128,6 +3139,12 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                                   ),
                                 ),
                               ],
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.grey),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
                             ),
                           ],
                         ),
@@ -3535,24 +3552,14 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
       String profile, stateInfo, String recordId) {
     return GestureDetector(
       onTap: () async {
+        if (_isDialogOpen) return; // prevent multiple clicks
+        _isDialogOpen = true;
         await getCurrentAllLeaveRequest(recordId);
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              backgroundColor: Colors.white,
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(" "),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.grey),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ),
+              backgroundColor: Appcolors.cardColor,
               content: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.95,
                 height: MediaQuery.of(context).size.height * 0.5,
@@ -3674,6 +3681,12 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               ),
                             ],
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.grey),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
                         ],
                       ),
                       SizedBox(
@@ -3774,7 +3787,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                           Visibility(
                             visible: record['status'] != 'rejected',
                             child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.3,
+                              width: MediaQuery.of(context).size.width * 0.28,
                               child: ElevatedButton(
                                 onPressed: () async {
                                   isSaveClick = true;
@@ -3870,10 +3883,13 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               ),
                             ),
                           ),
+                          SizedBox(
+                            width: 3,
+                          ),
                           Visibility(
                             visible: record['status'] != 'rejected',
                             child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.3,
+                              width: MediaQuery.of(context).size.width * 0.28,
                               child: ElevatedButton(
                                 onPressed: () async {
                                   await showDialog(
@@ -3975,6 +3991,7 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
             );
           },
         );
+        _isDialogOpen = false;
       },
       child: Container(
         padding: const EdgeInsets.all(8.0),
@@ -4117,7 +4134,9 @@ class _LeaveAllocationRequest extends State<LeaveAllocationRequest>
                               ),
                             ),
                           ),
-                          SizedBox(width: 8,),
+                        SizedBox(
+                          width: 8,
+                        ),
                         if (record['status'] == 'requested')
                           InkWell(
                             onTap: () async {

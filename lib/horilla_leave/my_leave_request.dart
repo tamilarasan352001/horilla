@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -79,6 +80,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
   int? difference;
   int? available;
   int maxCount = 5;
+     late Future<void> permissionFuture;
 
   String _getBreakdown(String breakdownValue) {
     final breakdownMap = {
@@ -131,6 +133,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    permissionFuture = checkPermissions();
     startDateSelect.text = "Select Start Date";
     endDateSelect.text = "Select End Date";
     _tabController = TabController(length: 5, vsync: this);
@@ -921,8 +924,10 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text("Leave Type",
-                              style: TextStyle(color: Colors.black,fontSize: 16,fontWeight: FontWeight.w500)
-                              ),
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500)),
                           SizedBox(
                               height:
                                   MediaQuery.of(context).size.height * 0.01),
@@ -987,7 +992,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text("Start Date",
-                                 style: TextStyle(
+                              style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500)),
@@ -1013,7 +1018,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               }
                             },
                             decoration: InputDecoration(
-                                 suffixIcon: Padding(
+                              suffixIcon: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Image.asset(
                                   Appimages.calendarIcon,
@@ -1034,7 +1039,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text("Start Date Breakdown",
-                                style: TextStyle(
+                              style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500)),
@@ -1086,7 +1091,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text("End Date",
-                                style: TextStyle(
+                              style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500)),
@@ -1111,7 +1116,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               }
                             },
                             decoration: InputDecoration(
-                                 suffixIcon: Padding(
+                              suffixIcon: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Image.asset(
                                   Appimages.calendarIcon,
@@ -1132,7 +1137,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text("End Date Breakdown",
-                                 style: TextStyle(
+                              style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500)),
@@ -1183,7 +1188,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               height:
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text("Description",
-                                style: TextStyle(
+                              style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500)),
@@ -1365,8 +1370,8 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                           }
                         },
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Appcolors.appBlue),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Appcolors.appBlue),
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
@@ -2702,46 +2707,40 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                               controller: _tabController,
                               children: [
                                 allMyRequestsCount == 0
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(
-                                              Icons.calendar_month_outlined,
-                                              color: Colors.black,
-                                              size: 92,
-                                            ),
+                                            SvgPicture.asset(
+                                                Appimages.employeesIcon),
                                             SizedBox(height: 20),
-                                            Text(
+                                            const Text(
                                               "There are no Leave records to display",
                                               style: TextStyle(
-                                                  fontSize: 16.0,
+                                                  fontSize: 15.0,
                                                   color: Colors.black,
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.w500),
                                             ),
                                           ],
                                         ),
                                       )
                                     : buildTabStatusContent(myAllRequests),
                                 requestedCount == 0
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(
-                                              Icons.calendar_month_outlined,
-                                              color: Colors.black,
-                                              size: 92,
-                                            ),
+                                            SvgPicture.asset(
+                                                Appimages.emptyData),
                                             SizedBox(height: 20),
-                                            Text(
+                                            const Text(
                                               "There are no Leave records to display",
                                               style: TextStyle(
-                                                  fontSize: 16.0,
+                                                  fontSize: 15.0,
                                                   color: Colors.black,
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.w500),
                                             ),
                                           ],
                                         ),
@@ -2751,23 +2750,20 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                                             record['status'] == 'requested')
                                         .toList()),
                                 approvedCount == 0
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(
-                                              Icons.calendar_month_outlined,
-                                              color: Colors.black,
-                                              size: 92,
-                                            ),
+                                            SvgPicture.asset(
+                                                Appimages.emptyData),
                                             SizedBox(height: 20),
-                                            Text(
+                                            const Text(
                                               "There are no Leave records to display",
                                               style: TextStyle(
-                                                  fontSize: 16.0,
+                                                  fontSize: 15.0,
                                                   color: Colors.black,
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.w500),
                                             ),
                                           ],
                                         ),
@@ -2777,23 +2773,20 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                                             record['status'] == 'approved')
                                         .toList()),
                                 cancelledCount == 0
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(
-                                              Icons.calendar_month_outlined,
-                                              color: Colors.black,
-                                              size: 92,
-                                            ),
+                                            SvgPicture.asset(
+                                                Appimages.emptyData),
                                             SizedBox(height: 20),
-                                            Text(
+                                            const Text(
                                               "There are no Leave records to display",
                                               style: TextStyle(
-                                                  fontSize: 16.0,
+                                                  fontSize: 15.0,
                                                   color: Colors.black,
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.w500),
                                             ),
                                           ],
                                         ),
@@ -2803,23 +2796,20 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                                             record['status'] == 'cancelled')
                                         .toList()),
                                 rejectedCount == 0
-                                    ? const Center(
+                                    ? Center(
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Icon(
-                                              Icons.calendar_month_outlined,
-                                              color: Colors.black,
-                                              size: 92,
-                                            ),
+                                            SvgPicture.asset(
+                                                Appimages.emptyData),
                                             SizedBox(height: 20),
-                                            Text(
+                                            const Text(
                                               "There are no Leave records to display",
                                               style: TextStyle(
-                                                  fontSize: 16.0,
+                                                  fontSize: 15.0,
                                                   color: Colors.black,
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.w500),
                                             ),
                                           ],
                                         ),
@@ -2838,7 +2828,8 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
                 ],
               ),
             ),
-      drawer: Drawer(
+      drawer: LeaveDrawer(permissionFuture: permissionFuture, permissionLeaveOverviewCheck: permissionLeaveOverviewCheck, permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck, permissionLeaveRequestCheck: permissionLeaveRequestCheck, permissionLeaveTypeCheck: permissionLeaveTypeCheck, permissionLeaveAllocationCheck: permissionLeaveAllocationCheck, permissionLeaveAssignCheck: permissionLeaveAssignCheck)
+      /* Drawer(
         child: FutureBuilder<void>(
           future: checkPermissions(),
           builder: (context, snapshot) {
@@ -2940,7 +2931,7 @@ class _MyLeaveRequest extends State<MyLeaveRequest>
             }
           },
         ),
-      ),
+      ), */
     );
   }
 

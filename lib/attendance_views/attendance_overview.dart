@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:horilla/attendance_views/appDrawer.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
 import 'package:http/http.dart' as http;
@@ -49,7 +50,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
   bool permissionAttendance = false;
   bool permissionAttendanceRequest = false;
   bool permissionHourAccount = false;
-
+  late Future<void> permissionFuture;
   @override
   void initState() {
     super.initState();
@@ -57,6 +58,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
     prefetchData();
     _scrollController.addListener(_scrollListener);
     _tabController = TabController(length: 2, vsync: this);
+    permissionFuture = permissionChecks();
     getAllOfflineEmployees(1);
     getTodayAttendance();
     getOfflineEmployeeCount();
@@ -397,7 +399,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
             ? _buildLoadingWidget()
             : _buildAttendanceOverview(),
       ),
-      drawer: Drawer(
+      drawer: AppDrawer(permissionFuture: permissionFuture, permissionOverview: permissionOverview, permissionAttendance: permissionAttendance, permissionAttendanceRequest: permissionAttendanceRequest, permissionHourAccount: permissionHourAccount)
+     /*  Drawer(
         child: FutureBuilder<void>(
           future: permissionChecks(),
           builder: (context, snapshot) {
@@ -447,7 +450,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                       ? ListTile(
                           title: const Text('Overview'),
                           onTap: () {
-                            Navigator.pushNamed(
+                            
+                            Navigator.pushReplacementNamed(
                                 context, '/attendance_overview');
                           },
                         )
@@ -456,7 +460,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                       ? ListTile(
                           title: const Text('Attendance'),
                           onTap: () {
-                            Navigator.pushNamed(
+                            
+                            Navigator.pushReplacementNamed(
                                 context, '/attendance_attendance');
                           },
                         )
@@ -465,7 +470,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                       ? ListTile(
                           title: const Text('Attendance Request'),
                           onTap: () {
-                            Navigator.pushNamed(context, '/attendance_request');
+                            
+                            Navigator.pushReplacementNamed(context, '/attendance_request');
                           },
                         )
                       : const SizedBox.shrink(),
@@ -473,7 +479,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                       ? ListTile(
                           title: const Text('Hour Account'),
                           onTap: () {
-                            Navigator.pushNamed(
+                            
+                            Navigator.pushReplacementNamed(
                                 context, '/employee_hour_account');
                           },
                         )
@@ -483,7 +490,7 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
             }
           },
         ),
-      ),
+      ), */
     );
   }
 
@@ -696,7 +703,9 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
       children: [
         ListView(
           children: [
-            SizedBox(height: 12,),
+            SizedBox(
+              height: 12,
+            ),
             Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: GridView.builder(
@@ -779,9 +788,8 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(width: 16.0),
-                               Container(
+                                Container(
                                   constraints: const BoxConstraints(
                                     maxWidth: 30,
                                     maxHeight: 30,
@@ -803,36 +811,33 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                                     ),
                                   ),
                                 ),
-
                               ],
                             ),
                           )
                         ],
                       ),
                     ),
-                    SizedBox(height: 10,),
+                    SizedBox(
+                      height: 10,
+                    ),
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.3,
                       child: Column(
                         children: [
                           Expanded(
                             child: getCurrentPageOfflineEmployees().isEmpty
-                                ? const Center(
+                                ?  Center(
                                     child: Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(
-                                          Icons.person_off,
-                                          color: Colors.black,
-                                          size: 92,
-                                        ),
+                                      SvgPicture.asset(Appimages.emptyData),
                                         SizedBox(height: 20),
-                                        Text(
+                                      const  Text(
                                           'There are no offline employees to display',
                                           style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 15,
                                           ),
                                         ),
                                       ],
@@ -874,7 +879,6 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                       ),
                     ),
                   ),
-
                   unselectedLabelColor: Appcolors.textColor,
                   isScrollable: true,
                   labelStyle: const TextStyle(
@@ -890,22 +894,18 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                     controller: _tabController,
                     children: [
                       overtimeValidate == 0
-                          ? const Center(
+                          ?  Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.inventory_outlined,
-                                    color: Colors.black,
-                                    size: 92,
-                                  ),
+                                SvgPicture.asset(Appimages.emptyData),
                                   SizedBox(height: 20),
-                                  Text(
+                                 const Text(
                                     "There are no attendance records to display",
                                     style: TextStyle(
-                                        fontSize: 16.0,
+                                        fontSize: 15.0,
                                         color: Colors.black,
-                                        fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -913,22 +913,18 @@ class _AttendanceOverviewState extends State<AttendanceOverview>
                           : buildOvertimeValidate(requestsOvertimeValidate,
                               baseUrl, _scrollController),
                       nonValidated == 0
-                          ? const Center(
+                          ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.inventory_outlined,
-                                    color: Colors.black,
-                                    size: 92,
-                                  ),
+                                  SvgPicture.asset(Appimages.emptyData),
                                   SizedBox(height: 20),
-                                  Text(
+                                  const Text(
                                     "There are no attendance records to display",
                                     style: TextStyle(
-                                        fontSize: 16.0,
+                                        fontSize: 15.0,
                                         color: Colors.black,
-                                        fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -969,7 +965,6 @@ Widget _buildGridItem(
     child: Padding(
       padding: const EdgeInsets.only(left: 10.0, top: 10),
       child: Column(
-      
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -982,15 +977,14 @@ Widget _buildGridItem(
               color: Colors.black,
             ),
           ),
-          SizedBox(height: 7), 
+          SizedBox(height: 7),
           Text(
             '$headerText\n',
-              maxLines: 2,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: responsiveFontSize(context, 18.0, 14.0),
               fontWeight: FontWeight.w600,
-              
               color: Appcolors.textColor,
             ),
           ),
@@ -999,10 +993,11 @@ Widget _buildGridItem(
     ),
   );
 }
+
 Widget buildOfflineEmployeesTile(
-    record,String leaveStatus, baseUrl, BuildContext context) {
+    record, String leaveStatus, baseUrl, BuildContext context) {
   return Padding(
-    padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+    padding: const EdgeInsets.only(left: 8.0, right: 8.0),
     child: Column(
       children: [
         Container(
@@ -1027,8 +1022,8 @@ Widget buildOfflineEmployeesTile(
                           child: Image.network(
                             baseUrl + record['employee_profile'],
                             fit: BoxFit.cover,
-                            errorBuilder: (BuildContext context, Object exception,
-                                StackTrace? stackTrace) {
+                            errorBuilder: (BuildContext context,
+                                Object exception, StackTrace? stackTrace) {
                               return const Icon(Icons.person);
                             },
                           ),
@@ -1049,7 +1044,7 @@ Widget buildOfflineEmployeesTile(
                 ),
               ),
               const SizedBox(width: 12),
-    
+
               // Name and status
               Expanded(
                 child: Text(
@@ -1061,7 +1056,7 @@ Widget buildOfflineEmployeesTile(
                   ),
                 ),
               ),
-    
+
               // Status and email icon
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1075,7 +1070,9 @@ Widget buildOfflineEmployeesTile(
                     ),
                     child: Center(
                       child: Text(
-                        leaveStatus.length>7?leaveStatus.substring(0,8):leaveStatus,
+                        leaveStatus.length > 7
+                            ? leaveStatus.substring(0, 8)
+                            : leaveStatus,
                         style: const TextStyle(
                           fontSize: 13.0,
                           color: Colors.red,
@@ -1471,9 +1468,8 @@ Widget buildOvertimeValidate(
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                        insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
                       backgroundColor: Appcolors.cardColor,
-                    
                       content: SizedBox(
                         width: MediaQuery.of(context).size.width * 0.95,
                         height: MediaQuery.of(context).size.height * 0.4,
@@ -1590,7 +1586,7 @@ Widget buildOvertimeValidate(
                                         ),
                                       ],
                                     ),
-                                     IconButton(
+                                    IconButton(
                                       icon: const Icon(Icons.close,
                                           color: Colors.grey),
                                       onPressed: () {
@@ -1779,7 +1775,6 @@ Widget buildOvertimeValidate(
                     border: Border.all(color: Colors.grey[50]!),
                     borderRadius: BorderRadius.circular(8.0),
                     color: Appcolors.cardColor,
-                  
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -1795,15 +1790,13 @@ Widget buildOvertimeValidate(
                               height: 50.0,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.grey, width: 1.0),
+                                border:
+                                    Border.all(color: Colors.grey, width: 1.0),
                               ),
                               child: Stack(
                                 children: [
-                                  if (record['employee_profile_url'] !=
-                                          null &&
-                                      record['employee_profile_url']
-                                          .isNotEmpty)
+                                  if (record['employee_profile_url'] != null &&
+                                      record['employee_profile_url'].isNotEmpty)
                                     Positioned.fill(
                                       child: ClipOval(
                                         child: Image.network(
@@ -1819,8 +1812,7 @@ Widget buildOvertimeValidate(
                                         ),
                                       ),
                                     ),
-                                  if (record['employee_profile_url'] ==
-                                          null ||
+                                  if (record['employee_profile_url'] == null ||
                                       record['employee_profile_url'].isEmpty)
                                     Positioned.fill(
                                       child: Container(
@@ -1863,13 +1855,13 @@ Widget buildOvertimeValidate(
                           ],
                         ),
                         SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height * 0.01),
+                            height: MediaQuery.of(context).size.height * 0.01),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Date'),
-                            Text('${record['attendance_date']}',
+                            Text(
+                              '${record['attendance_date']}',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -1878,21 +1870,24 @@ Widget buildOvertimeValidate(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Check-In'),
-                            Text('${record['attendance_clock_in_date']}',style: TextStyle(fontWeight: FontWeight.w500),),
+                            Text(
+                              '${record['attendance_clock_in_date']}',
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Check-Out'),
-                            Text('${record['attendance_clock_out_date']}',
+                            Text(
+                              '${record['attendance_clock_out_date']}',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                         SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height * 0.02),
+                            height: MediaQuery.of(context).size.height * 0.02),
                       ],
                     ),
                   ),
@@ -1926,7 +1921,6 @@ Widget buildNonValidatedAttendance(
                   builder: (BuildContext context) {
                     return AlertDialog(
                       backgroundColor: Appcolors.cardColor,
-                   
                       content: SizedBox(
                         width: MediaQuery.of(context).size.width * 0.95,
                         height: MediaQuery.of(context).size.height * 0.4,
@@ -2043,7 +2037,7 @@ Widget buildNonValidatedAttendance(
                                         ),
                                       ],
                                     ),
-                                     IconButton(
+                                    IconButton(
                                       icon: const Icon(Icons.close,
                                           color: Colors.grey),
                                       onPressed: () {
@@ -2229,7 +2223,6 @@ Widget buildNonValidatedAttendance(
                     border: Border.all(color: Colors.grey[50]!),
                     borderRadius: BorderRadius.circular(8.0),
                     color: Appcolors.cardColor,
-                   
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -2245,15 +2238,13 @@ Widget buildNonValidatedAttendance(
                               height: 50.0,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.grey, width: 1.0),
+                                border:
+                                    Border.all(color: Colors.grey, width: 1.0),
                               ),
                               child: Stack(
                                 children: [
-                                  if (record['employee_profile_url'] !=
-                                          null &&
-                                      record['employee_profile_url']
-                                          .isNotEmpty)
+                                  if (record['employee_profile_url'] != null &&
+                                      record['employee_profile_url'].isNotEmpty)
                                     Positioned.fill(
                                       child: ClipOval(
                                         child: Image.network(
@@ -2269,8 +2260,7 @@ Widget buildNonValidatedAttendance(
                                         ),
                                       ),
                                     ),
-                                  if (record['employee_profile_url'] ==
-                                          null ||
+                                  if (record['employee_profile_url'] == null ||
                                       record['employee_profile_url'].isEmpty)
                                     Positioned.fill(
                                       child: Container(
@@ -2313,13 +2303,13 @@ Widget buildNonValidatedAttendance(
                           ],
                         ),
                         SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height * 0.01),
+                            height: MediaQuery.of(context).size.height * 0.01),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Date'),
-                            Text('${record['attendance_date']}',
+                            Text(
+                              '${record['attendance_date']}',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -2328,7 +2318,8 @@ Widget buildNonValidatedAttendance(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Check-In'),
-                            Text('${record['attendance_clock_in_date']}',
+                            Text(
+                              '${record['attendance_clock_in_date']}',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -2337,14 +2328,14 @@ Widget buildNonValidatedAttendance(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Check-Out'),
-                            Text('${record['attendance_clock_out_date']}',
+                            Text(
+                              '${record['attendance_clock_out_date']}',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                         SizedBox(
-                            height:
-                                MediaQuery.of(context).size.height * 0.02),
+                            height: MediaQuery.of(context).size.height * 0.02),
                       ],
                     ),
                   ),

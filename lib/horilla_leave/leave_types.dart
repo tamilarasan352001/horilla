@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:horilla/common/appColors.dart';
 import 'package:horilla/common/appimages.dart';
+import 'package:horilla/horilla_leave/leaver_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -29,6 +30,7 @@ class _LeaveTypes extends State<LeaveTypes> {
   bool permissionLeaveAllocationCheck = false;
   late String baseUrl = '';
   late Map<String, dynamic> arguments;
+     late Future<void> permissionFuture;
 
   @override
   void dispose() {
@@ -46,6 +48,7 @@ class _LeaveTypes extends State<LeaveTypes> {
   @override
   void initState() {
     super.initState();
+    permissionFuture = checkPermissions();
     getLeaveType();
     getBaseUrl();
     prefetchData();
@@ -307,22 +310,18 @@ class _LeaveTypes extends State<LeaveTypes> {
                   ),
                 )
               : leaveTypeCount == 0
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.calendar_month_outlined,
-                            color: Colors.black,
-                            size: 92,
-                          ),
+                          SvgPicture.asset(Appimages.emptyData),
                           SizedBox(height: 20),
-                          Text(
+                          const Text(
                             "There are no Leave type records to display",
                             style: TextStyle(
-                                fontSize: 16.0,
+                                fontSize: 15.0,
                                 color: Colors.black,
-                                fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.w500),
                           ),
                         ],
                       ),
@@ -340,7 +339,8 @@ class _LeaveTypes extends State<LeaveTypes> {
                     ),
         ),
       ),
-      drawer: Drawer(
+      drawer: LeaveDrawer(permissionFuture: permissionFuture, permissionLeaveOverviewCheck: permissionLeaveOverviewCheck, permissionMyLeaveRequestCheck: permissionMyLeaveRequestCheck, permissionLeaveRequestCheck: permissionLeaveRequestCheck, permissionLeaveTypeCheck: permissionLeaveTypeCheck, permissionLeaveAllocationCheck: permissionLeaveAllocationCheck, permissionLeaveAssignCheck: permissionLeaveAssignCheck)
+      /* Drawer(
         child: FutureBuilder<void>(
           future: checkPermissions(),
           builder: (context, snapshot) {
@@ -443,7 +443,7 @@ class _LeaveTypes extends State<LeaveTypes> {
             }
           },
         ),
-      ),
+      ), */
     );
   }
 }
