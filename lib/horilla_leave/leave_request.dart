@@ -4226,7 +4226,7 @@ class _LeaveRequest extends State<LeaveRequest>
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.yellow,
+                                  backgroundColor: Colors.red,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
@@ -4884,7 +4884,7 @@ class _LeaveRequest extends State<LeaveRequest>
                               },
                               style: ElevatedButton.styleFrom(
                                 elevation: 0,
-                                backgroundColor: Colors.yellow,
+                                backgroundColor: Colors.red,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12.0),
                                 ),

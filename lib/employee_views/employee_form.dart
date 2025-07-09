@@ -920,7 +920,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     }
   }
 
-  Future<void> updateEmployeeImage(Map<String, dynamic> updatedDetails,
+  /* Future<void> updateEmployeeImage(Map<String, dynamic> updatedDetails,
       checkFile, String fileName, String filePath) async {
     final prefs = await SharedPreferences.getInstance();
     var token = prefs.getString("token");
@@ -953,6 +953,69 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         setState(() {});
       }
       setState(() {});
+    }
+  } */
+  Future<void> updateEmployeeImage(
+    Map<String, dynamic> updatedDetails,
+    bool checkFile,
+    String fileName,
+    String filePath,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString("token");
+    var typedServerUrl = prefs.getString("typed_url");
+
+    String employeeId = updatedDetails['id'].toString();
+
+    var request = http.MultipartRequest(
+      'PUT',
+      Uri.parse('$typedServerUrl/api/employee/employees/$employeeId/'),
+    );
+
+    if (checkFile) {
+      var attachment = await http.MultipartFile.fromPath(
+        'employee_profile',
+        filePath,
+      );
+      request.files.add(attachment);
+    }
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    var response = await request.send();
+
+    if (!mounted) return;
+
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode == 200) {
+      _errorMessage = null;
+
+      // Optional: log server response
+      print('Upload Success: $responseBody');
+
+      //await getEmployeeDetails(); // ensure UI updates with new image
+
+      if (mounted) {
+        setState(() {
+          isLoadingImage = false;
+        });
+      }
+    } else {
+      var errorJson = jsonDecode(responseBody);
+      print("Upload Failed Response: $errorJson");
+
+      if (errorJson.containsKey('non_field_errors')) {
+        _errorMessage = errorJson['non_field_errors'].join('\n');
+      } else {
+        _errorMessage = 'Image upload failed. Please try again.';
+      }
+
+      if (mounted) {
+        setState(() {
+          isLoadingImage = false;
+        });
+      }
     }
   }
 
@@ -1328,21 +1391,48 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     }
   }
 
+  // Future<void> _pickImage(int id) async {
+  //   isLoadingImage = true;
+  //   XFile? file = await uploadFile(context);
+  //   if (!mounted) return;
+  //   if (file != null) {
+  //     setState(() async {
+  //       pickedFile = file;
+  //       fileName = file.name;
+  //       filePath = file.path;
+  //       checkFile = true;
+  //       Map<String, dynamic> updatedDetails = {
+  //         "id": id,
+  //       };
+  //       await updateEmployeeImage(
+  //           updatedDetails, checkFile, fileName, filePath);
+  //     });
+  //   }
+  // }
   Future<void> _pickImage(int id) async {
-    isLoadingImage = true;
+    setState(() {
+      isLoadingImage = true;
+    });
+
     XFile? file = await uploadFile(context);
     if (!mounted) return;
+
     if (file != null) {
-      setState(() async {
-        pickedFile = file;
-        fileName = file.name;
-        filePath = file.path;
-        checkFile = true;
-        Map<String, dynamic> updatedDetails = {
-          "id": id,
-        };
-        await updateEmployeeImage(
-            updatedDetails, checkFile, fileName, filePath);
+      pickedFile = file;
+      fileName = file.name;
+      filePath = file.path;
+      checkFile = true;
+
+      Map<String, dynamic> updatedDetails = {
+        "id": id,
+      };
+
+      await updateEmployeeImage(updatedDetails, checkFile, fileName, filePath);
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoadingImage = false;
       });
     }
   }
@@ -1423,13 +1513,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             return Stack(
               children: [
                 AlertDialog(
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  backgroundColor: Appcolors.cardColor,
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         "Edit $name",
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black,
                             fontSize: 21),
                       ),
@@ -1471,7 +1563,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           TextField(
                             controller: badgeIdController,
                             decoration: InputDecoration(
-                              labelText: "Badge ID",
+                              hintText: "Badge ID",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               border: const OutlineInputBorder(),
                               contentPadding:
@@ -1492,7 +1584,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'First Name',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1501,7 +1596,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: firstNameController,
                                       decoration: InputDecoration(
-                                        labelText: "First Name",
+                                        hintText: "First Name",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1525,7 +1620,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Last Name",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1534,7 +1632,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: lastNameController,
                                       decoration: InputDecoration(
-                                        labelText: "Last Name",
+                                        hintText: "Last Name",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1562,7 +1660,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Email',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1571,7 +1672,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: emailController,
                                       decoration: InputDecoration(
-                                        labelText: "Email",
+                                        hintText: "Email",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1595,7 +1696,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Phone",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1604,7 +1708,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: phoneController,
                                       decoration: InputDecoration(
-                                        labelText: "Phone",
+                                        hintText: "Phone",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1632,7 +1736,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Date of Birth',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1659,7 +1766,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       },
                                       decoration: InputDecoration(
                                         border: const OutlineInputBorder(),
-                                        labelText: "Date of Birth",
+                                        hintText: "Date of Birth",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         contentPadding:
@@ -1682,7 +1789,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Gender",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1714,7 +1824,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                         genderController.text = newValue!;
                                       },
                                       decoration: InputDecoration(
-                                        labelText: "Gender",
+                                        hintText: "Gender",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1739,7 +1849,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Qualification',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1748,7 +1861,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: qualificationController,
                                       decoration: InputDecoration(
-                                        labelText: "Qualification",
+                                        hintText: "Qualification",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1772,7 +1885,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Experience",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1781,7 +1897,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: experienceController,
                                       decoration: InputDecoration(
-                                        labelText: "Experience",
+                                        hintText: "Experience",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1803,7 +1919,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             'Address',
-                            style: TextStyle(color: Colors.black),
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -1811,7 +1930,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           TextField(
                             controller: addressController,
                             decoration: InputDecoration(
-                              labelText: "Address",
+                              hintText: "Address",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               border: const OutlineInputBorder(),
                               contentPadding:
@@ -1832,7 +1951,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'City',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1841,7 +1963,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: cityController,
                                       decoration: InputDecoration(
-                                        labelText: "City",
+                                        hintText: "City",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1865,7 +1987,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Zip Code",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1874,7 +1999,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: zipCodeController,
                                       decoration: InputDecoration(
-                                        labelText: "Zip Code",
+                                        hintText: "Zip Code",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1902,7 +2027,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Emergency Contact',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1911,7 +2039,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: emergencyContactController,
                                       decoration: InputDecoration(
-                                        labelText: "Emergency Contact",
+                                        hintText: "Emergency Contact",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1929,23 +2057,30 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               ),
                               SizedBox(
                                   width:
-                                      MediaQuery.of(context).size.width * 0.03),
+                                      MediaQuery.of(context).size.width * 0.05),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.05),
                                     const Text(
                                       "Contact Name",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
                                             MediaQuery.of(context).size.height *
-                                                0.01),
+                                                0.04),
                                     TextField(
                                       controller: contactNameController,
                                       decoration: InputDecoration(
-                                        labelText: "Contact Name",
+                                        hintText: "Contact Name",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -1973,7 +2108,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Contact Relation',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -1983,7 +2121,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       controller:
                                           emergencyContactRelationController,
                                       decoration: InputDecoration(
-                                        labelText: "Emergency Contact Relation",
+                                        hintText: "Emergency Contact Relation",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -2008,7 +2146,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Marital Status",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -2042,7 +2183,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                             newValue!;
                                       },
                                       decoration: InputDecoration(
-                                        labelText: "Marital Status",
+                                        hintText: "Marital Status",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -2061,7 +2202,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             'Children',
-                            style: TextStyle(color: Colors.black),
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -2069,7 +2213,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           TextField(
                             controller: childrenController,
                             decoration: InputDecoration(
-                              labelText: "Children",
+                              hintText: "Children",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               border: const OutlineInputBorder(),
                               contentPadding:
@@ -2086,6 +2230,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   actions: <Widget>[
                     SizedBox(
                       width: double.infinity,
+                      height: 48,
                       child: TextButton(
                         onPressed: () async {
                           if (birthController.text.isEmpty) {
@@ -2138,12 +2283,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           }
                         },
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.red),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Appcolors.appBlue),
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6.0),
+                              borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
                         ),
@@ -2205,13 +2350,14 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             return Stack(
               children: [
                 AlertDialog(
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         "Edit $firstName",
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black,
                             fontSize: 21),
                       ),
@@ -2245,7 +2391,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             'Department',
-                            style: TextStyle(color: Colors.black),
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -3078,13 +3227,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             return Stack(
               children: [
                 AlertDialog(
+                  backgroundColor: Appcolors.cardColor,
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 16),
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         "Edit $firstName",
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black,
                             fontSize: 21),
                       ),
@@ -3124,7 +3275,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Bank Name',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -3133,7 +3287,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: bankNameController,
                                       decoration: InputDecoration(
-                                        labelText: "Bank Name",
+                                        hintText: "Bank Name",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -3161,7 +3315,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Account Number",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -3170,7 +3327,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: bankNameController,
                                       decoration: InputDecoration(
-                                        labelText: "Account Number",
+                                        hintText: "Account Number",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -3202,7 +3359,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'Branch',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -3211,7 +3371,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: branchController,
                                       decoration: InputDecoration(
-                                        labelText: "Branch",
+                                        hintText: "Branch",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -3239,7 +3399,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Bank Code #1",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -3248,7 +3411,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: bankCodeOneController,
                                       decoration: InputDecoration(
-                                        labelText: "Bank Code #1",
+                                        hintText: "Bank Code #1",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -3274,7 +3437,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   MediaQuery.of(context).size.height * 0.03),
                           const Text(
                             "Bank Address",
-                            style: TextStyle(color: Colors.black),
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500),
                           ),
                           SizedBox(
                               height:
@@ -3282,7 +3448,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           TextField(
                             controller: bankAddressController,
                             decoration: InputDecoration(
-                              labelText: "Bank Address",
+                              hintText: "Bank Address",
                               labelStyle: TextStyle(color: Colors.grey[350]),
                               border: const OutlineInputBorder(),
                               contentPadding:
@@ -3307,7 +3473,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       'City',
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -3316,7 +3485,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: cityController,
                                       decoration: InputDecoration(
-                                        labelText: "City",
+                                        hintText: "City",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -3344,7 +3513,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   children: [
                                     const Text(
                                       "Bank Code #2",
-                                      style: TextStyle(color: Colors.black),
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500),
                                     ),
                                     SizedBox(
                                         height:
@@ -3353,7 +3525,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     TextField(
                                       controller: bankCodeTwoController,
                                       decoration: InputDecoration(
-                                        labelText: "Bank Code #2",
+                                        hintText: "Bank Code #2",
                                         labelStyle:
                                             TextStyle(color: Colors.grey[350]),
                                         border: const OutlineInputBorder(),
@@ -3380,6 +3552,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   ),
                   actions: <Widget>[
                     SizedBox(
+                      height: 48,
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () async {
@@ -3469,12 +3642,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           }
                         },
                         style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.red),
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              Appcolors.appBlue),
                           shape:
                               MaterialStateProperty.all<RoundedRectangleBorder>(
                             RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6.0),
+                              borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
                         ),
@@ -4155,6 +4328,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     bool permissionCheck = args?['permission_check'] ?? false;
     bool showWorkTypeAndShiftTab = permissionCheck ||
         (employeeDetails['id'] != null && employeeDetails['id'] == employeeId);
+    final imagePath = employeeDetails['employee_profile'] ?? '';
+    final fullImageUrl = imagePath.startsWith('http')
+        ? imagePath
+        : baseUrl + imagePath + '?v=${DateTime.now().millisecondsSinceEpoch}';
     return Scrollbar(
       controller: _vertical,
       child: ListView(
@@ -4191,12 +4368,86 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             backgroundColor: Colors.white,
                             child: Stack(
                               children: [
+                                if (employeeDetails['employee_profile']
+                                        ?.isNotEmpty ??
+                                    false)
+                                  Positioned.fill(
+                                    child: ClipOval(
+                                      child: Image.network(
+                                        fullImageUrl,
+                                        fit: BoxFit.cover,
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return const Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        },
+                                        errorBuilder: (BuildContext context,
+                                            Object exception,
+                                            StackTrace? stackTrace) {
+                                          print("Image load error: $exception");
+                                          return const Icon(Icons.person);
+                                        },
+                                      ),
+                                    ),
+                                  )
+                                // Positioned.fill(
+                                //   child: ClipOval(
+                                //     child:
+                                //     Image.network(
+                                //     fullImageUrl,
+                                //     fit: BoxFit.cover,
+                                //     errorBuilder: (BuildContext context,
+                                //         Object exception,
+                                //         StackTrace? stackTrace) {
+                                //       return const Icon(Icons.person);
+                                //     },
+                                //   )
+                                //   ),
+                                // )
+                                else
+                                  Positioned.fill(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey[400],
+                                      ),
+                                      child: const Icon(Icons.person),
+                                    ),
+                                  ),
+                                // Camera icon overlay
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      await _pickImage(employeeDetails['id']);
+                                    },
+                                    child: const CircleAvatar(
+                                      radius: 12.0,
+                                      backgroundColor: Appcolors.appBlue,
+                                      child: Icon(Icons.camera_alt,
+                                          size: 12.0, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        /* CircleAvatar(
+                            radius: 30.0,
+                            backgroundColor: Colors.white,
+                            child: Stack(
+                              children: [
                                 if (employeeDetails['employee_profile'] !=
                                         null &&
                                     employeeDetails['employee_profile']
                                         .isNotEmpty)
                                   Positioned.fill(
                                     child: ClipOval(
+                                      
                                       child: Image.network(
                                         baseUrl +
                                             employeeDetails['employee_profile'],
@@ -4241,7 +4492,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 ),
                               ],
                             ),
-                          ),
+                          ), */
                         const SizedBox(width: 16.0),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4710,7 +4961,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     setState(() {
       aboutIndex = index;
     });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (index == 0) {
         _personalScrollController.jumpTo(0);
       } else if (index == 1) {
